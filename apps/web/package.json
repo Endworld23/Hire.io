@@ -1,17 +1,12 @@
 {
-  "name": "hire-io",
+  "name": "@hire-io/web",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
-    "dev": "npm run dev --workspace=@hire-io/web",
-    "build": "npm run build --workspace=@hire-io/web",
-    "start": "npm run start --workspace=@hire-io/web",
-    "lint": "npm run lint --workspace=@hire-io/web",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",
