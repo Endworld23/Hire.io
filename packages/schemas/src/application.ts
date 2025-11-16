@@ -1,6 +1,18 @@
 import { z } from 'zod'
 
-export const applicationStageSchema = z.enum(['applied', 'screening', 'interview', 'offer', 'hired', 'rejected'])
+export const applicationStageSchema = z.enum([
+  'new',
+  'applied',
+  'recruiter_screen',
+  'screening',
+  'submitted_to_client',
+  'client_shortlisted',
+  'client_rejected',
+  'interview',
+  'offer',
+  'hired',
+  'rejected',
+])
 
 export const applicationSchema = z.object({
   jobId: z.string().uuid('Invalid job ID'),

@@ -1,8 +1,15 @@
 import Link from 'next/link'
 import { listJobs } from '@/lib/actions/jobs'
 
-export default async function JobsPage() {
+type JobsPageProps = {
+  searchParams?: {
+    created?: string
+  }
+}
+
+export default async function JobsPage({ searchParams }: JobsPageProps) {
   const jobs = await listJobs()
+  const jobCreated = searchParams?.created === '1'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -25,6 +32,12 @@ export default async function JobsPage() {
               Create Job
             </Link>
           </div>
+
+          {jobCreated && (
+            <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+              Job created successfully. Recruiters can now add candidates to the pipeline.
+            </div>
+          )}
 
           {jobs.length === 0 ? (
             <div className="text-center py-12">
@@ -137,6 +150,12 @@ export default async function JobsPage() {
                               </p>
                               <p className="text-xs text-gray-500">Applications</p>
                             </div>
+                            <Link
+                              href={`/dashboard/jobs/${job.id}/edit`}
+                              className="inline-flex items-center rounded-md border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                              Edit
+                            </Link>
                             <svg
                               className="h-5 w-5 text-gray-400"
                               fill="none"
