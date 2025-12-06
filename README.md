@@ -1,273 +1,322 @@
-# Hire.io - Phase 0
+# Hire.io – Phase 0 / Early Phase 1
+### AI-Powered Staffing & Hiring Platform – Foundation Build
 
-> AI-Powered Hiring Platform - Foundation Build
+Hire.io is a next-generation **staffing agency enablement platform** that uses AI to reduce bias, streamline recruitment, and connect the right candidates with the right opportunities.
 
-Hire.io is a next-generation hiring platform that leverages AI to reduce bias, streamline recruitment, and connect the right candidates with the right opportunities.
+It combines:
 
-## Overview
-
-Phase 0 establishes the foundation with a complete database schema, core UI components, and an interactive demo showcasing the end-to-end hiring flow. All features use mock data and placeholder AI logic to demonstrate the intended user experience.
-
-## Features
-
-### For Employers
-- **Job Intake Wizard**: Multi-step form to create detailed job postings with requirements
-- **Leniency Slider**: Configure hiring flexibility (strict to lenient matching)
-- **Salary Gauge**: Visual salary range picker with market comparison (mock data)
-- **Anonymized Shortlist**: Review candidates without personal information to reduce bias
-- **Match Scoring**: AI-generated compatibility scores for each candidate
-
-### For Candidates
-- **Profile Builder**: Step-by-step profile creation wizard
-- **Resume Upload**: Drag-and-drop resume upload with automatic parsing
-- **Skill Extraction**: Automatic extraction of skills and experience from resumes (mock)
-- **Experience Tracking**: Years of experience and skill proficiency
-
-### Admin Tools
-- **Table Views**: View all database entities (employers, candidates, jobs, matches, feedback)
-- **Data Management**: Browse and inspect all system data
-
-## Tech Stack
-
-- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS
-- **Backend**: Supabase (PostgreSQL, Authentication, Storage)
-- **Database**: PostgreSQL with Row Level Security (RLS)
-- **Styling**: Tailwind CSS with custom design system
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and npm
-- Supabase account (database is pre-configured)
-
-### Installation
-
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Environment variables:**
-   The `.env.local` file is already configured with Supabase credentials.
-
-3. **Run development server:**
-   ```bash
-   npm run dev
-   ```
-
-4. **Open the app:**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-### Exploring the Demo
-
-Visit [http://localhost:3000/demo](http://localhost:3000/demo) to:
-
-1. **Experience the Flow**: Step through the complete hiring process
-   - Employer creates a job
-   - Candidates apply with resumes
-   - AI matches candidates to jobs
-   - Employer reviews anonymized shortlist
-   - Feedback collection
-
-2. **View Admin Tables**: See all database entities and their relationships
-
-3. **Seed Mock Data**: Click "Seed Mock Data" to populate the database with sample records
-
-## Project Structure
-
-```
-hire-io/
-├── app/
-│   ├── page.tsx              # Landing page
-│   └── demo/
-│       └── page.tsx          # Interactive demo
-├── components/
-│   ├── AdminTableView.tsx    # Admin dashboard tables
-│   ├── AnonymizedShortlist.tsx # Candidate shortlist view
-│   ├── CandidateProfileBuilder.tsx # Candidate onboarding
-│   ├── JobIntakeWizard.tsx   # Job creation wizard
-│   ├── LeniencySlider.tsx    # Hiring flexibility control
-│   ├── ResumeUpload.tsx      # Resume upload & parsing
-│   └── SalaryGauge.tsx       # Salary visualization
-├── lib/
-│   ├── supabase.ts           # Supabase client & types
-│   └── auth.ts               # Authentication helpers
-└── supabase/
-    └── migrations/           # Database migrations
-```
-
-## Database Schema
-
-### Tables
-
-1. **employers** - Company profiles
-2. **candidates** - Job seeker profiles with resume data
-3. **jobs** - Job postings with requirements
-4. **job_intake** - Detailed hiring preferences per job
-5. **matches** - AI-generated candidate-job matches
-6. **feedback** - Employer feedback on matches
-
-All tables have Row Level Security (RLS) enabled to ensure data privacy.
-
-## Phase 1 Roadmap
-
-### High Priority TODOs
-
-#### 1. Real Authentication
-- [ ] Implement full Supabase auth flow (sign up, login, logout)
-- [ ] Add user role management (employer vs candidate)
-- [ ] Create protected routes and auth middleware
-- [ ] Add password reset and email verification
-
-#### 2. Real Resume Parsing
-- [ ] Integrate PDF parsing library (e.g., pdf-parse)
-- [ ] Implement text extraction from DOC/DOCX files
-- [ ] Build NLP-based skill extraction
-- [ ] Extract education, experience, and contact info
-- [ ] Store resume files in Supabase Storage
-
-#### 3. AI Matching Engine
-- [ ] Design matching algorithm considering:
-  - Skill overlap (required vs possessed)
-  - Experience level alignment
-  - Leniency score adjustments
-  - Priority weighting
-  - Dealbreaker enforcement
-- [ ] Implement match score calculation (0-100)
-- [ ] Add real-time matching when candidates apply
-- [ ] Create batch matching jobs for existing candidates
-
-#### 4. Full CRUD Operations
-- [ ] Build employer dashboard to manage jobs
-- [ ] Add job editing and deletion
-- [ ] Create candidate application flow
-- [ ] Implement match acceptance/rejection
-- [ ] Add feedback submission forms
-
-#### 5. Enhanced UI/UX
-- [ ] Add loading states and skeletons
-- [ ] Implement error boundaries and error handling
-- [ ] Add toast notifications for user actions
-- [ ] Create mobile-responsive layouts
-- [ ] Add dark mode support
-
-#### 6. Real-time Features
-- [ ] Use Supabase Realtime for live updates
-- [ ] Show new matches as they happen
-- [ ] Live notification system
-- [ ] Real-time shortlist collaboration
-
-#### 7. Analytics & Insights
-- [ ] Employer dashboard with hiring metrics
-- [ ] Match quality analytics
-- [ ] Time-to-hire tracking
-- [ ] Candidate funnel visualization
-
-#### 8. Communication
-- [ ] In-app messaging between employers and candidates
-- [ ] Email notifications (job matches, status updates)
-- [ ] Interview scheduling integration
-
-### Nice-to-Have Features
-
-- [ ] Candidate search and filtering for employers
-- [ ] Saved candidate lists
-- [ ] Job templates for employers
-- [ ] Candidate job alerts and recommendations
-- [ ] Video interview integration
-- [ ] Reference checking workflow
-- [ ] Offer letter generation
-- [ ] Onboarding checklist
-
-### Technical Improvements
-
-- [ ] Add comprehensive unit tests
-- [ ] Implement E2E testing with Playwright
-- [ ] Set up CI/CD pipeline
-- [ ] Add logging and monitoring (e.g., Sentry)
-- [ ] Optimize database queries and add indexes
-- [ ] Implement caching strategy
-- [ ] Add API rate limiting
-- [ ] Create API documentation
-- [ ] Set up staging environment
-
-## Extending the Project
-
-### Adding a New Component
-
-1. Create component in `components/` directory
-2. Use TypeScript for type safety
-3. Follow existing design patterns (Tailwind CSS classes)
-4. Export and import in relevant pages
-
-### Adding a New Database Table
-
-1. Create migration in `supabase/migrations/`
-2. Use descriptive filename: `create_table_name.sql`
-3. Include RLS policies for security
-4. Add TypeScript types to `lib/supabase.ts`
-
-### Adding a New Page
-
-1. Create folder/file in `app/` directory
-2. Export default React component
-3. Use 'use client' directive if needed
-4. Link from navigation
-
-## Environment Variables
-
-Required variables in `.env.local`:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-## Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run lint` - Run ESLint
-
-## Security Notes
-
-- All database tables have Row Level Security (RLS) enabled
-- Users can only access their own data
-- Anonymous access is restricted
-- Supabase handles authentication securely
-- File uploads should be validated in production
-
-## Known Limitations (Phase 0)
-
-- Resume parsing uses placeholder logic
-- Match scores are randomly generated
-- No real authentication flow (stub only)
-- Salary market data is hardcoded
-- No persistent state between sessions
-- Limited error handling
-- No email notifications
-
-## Contributing
-
-This is Phase 0. For Phase 1, consider:
-
-1. Following the roadmap priorities
-2. Maintaining type safety
-3. Writing tests for new features
-4. Updating this README with changes
-5. Following existing code patterns
-
-## License
-
-Proprietary - All rights reserved
-
-## Contact
-
-For questions about extending or deploying Hire.io, refer to the Phase 1 roadmap above.
+- A **multi-tenant ATS** for staffing agencies and employers  
+- A **global candidate pool** (Hire.io-managed marketplace)  
+- **EEO-blind, AI-assisted matching** between jobs and candidates  
 
 ---
 
-**Current Status**: Phase 0 Complete ✓
-**Next Milestone**: Phase 1 - Real Authentication & AI Matching
+# Overview
+
+Phase 0 established the foundation:
+
+- A complete **multi-tenant database schema**
+- Core **UI components**, mock flows, and demo pages  
+- Documentation for **architecture, security, and SOC2 readiness**
+
+We are now transitioning into **Phase 1**, where the real system begins:
+
+- Supabase auth (real login, signup, tenant onboarding)
+- Real candidate profiles + applications
+- EEO-blind client review flows  
+- AI-assisted matching + candidate pool gauge
+
+> **Note:** Much of the AI & matching logic is still mocked. The goal is to illustrate UX and workflows while the backend becomes fully wired.
+
+---
+
+# Features
+
+## Employer & Agency Features (Tenant Side)
+
+- **Job Intake Wizard** – Multi-step job creation flow  
+- **Leniency Slider** – Controls strict ↔ lenient matching logic  
+- **Salary Gauge** – Visual range picker with mock market guidance  
+- **Anonymized Shortlist** – Removes personal info for bias reduction  
+- **Match Scoring (Mock)** – AI-style compatibility scoring  
+- **Pipeline Stages** – `new → recruiter_screen → submitted_to_client → interview → offer → hired/rejected`
+
+---
+
+## Candidate Features (Global User Side)
+
+- **Profile Builder** – Guided onboarding  
+- **Resume Upload** – Drag-and-drop (stubbed)  
+- **Skill Extraction (Mock)** – Placeholder parsing logic  
+- **Experience Tracking** – Stored in structured `jsonb` fields  
+- **Global Accounts** – Candidates may exist without belonging to a tenant  
+
+---
+
+## Admin / Internal Tools (Future)
+
+- **Global Candidate Pool Management**  
+- **Tenant Management** (agencies, subdomains, settings)  
+- **Audit Log** (events, views, updates, AI usage)  
+- **Structured Feedback** on applications  
+
+---
+
+# Tech Stack
+
+- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS  
+- **Backend:** Supabase (PostgreSQL, Auth, Storage)  
+- **Security:** PostgreSQL Row Level Security (RLS)  
+- **Styling:** Tailwind CSS design system  
+
+---
+
+# Getting Started
+
+## Prerequisites
+
+- Node.js 18+  
+- Supabase account  
+- Environment variables stored in `.env.local`:
+
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url  
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+---
+
+## Installation
+
+From the project root:
+
+    npm install
+    npm run dev
+
+Open the app at:
+
+- http://localhost:3000  
+- http://localhost:3000/demo (interactive demo)
+
+---
+
+# Exploring the Demo (Phase 0)
+
+The `/demo` route allows you to:
+
+- Walk through an **example job intake**  
+- Apply as a candidate (mocked)  
+- View **AI-style matches**  
+- Review **anonymized shortlists**  
+- Browse conceptual **admin tables**  
+- (Optional) seed mock data for UI testing  
+
+This demo is **UI-only** and illustrates the vision while the backend becomes fully wired.
+
+---
+
+# Project Structure
+
+    hire-io/
+    ├── app/
+    │   ├── page.tsx                        # Landing page
+    │   └── demo/
+    │       └── page.tsx                    # Interactive demo
+    ├── components/
+    │   ├── AdminTableView.tsx
+    │   ├── AnonymizedShortlist.tsx
+    │   ├── CandidateProfileBuilder.tsx
+    │   ├── JobIntakeWizard.tsx
+    │   ├── LeniencySlider.tsx
+    │   ├── ResumeUpload.tsx
+    │   └── SalaryGauge.tsx
+    ├── lib/
+    │   ├── supabase.ts                     # Supabase client
+    │   └── auth.ts                         # Phase 1 auth helpers
+    └── supabase/
+        └── migrations/                     # Authoritative schema
+
+---
+
+# Database Schema (Consolidated)
+
+The authoritative schema includes:
+
+### tenants  
+Multi-tenant root model for agencies/employers.
+
+### users  
+All authenticated users.
+
+- `tenant_id = NULL` → global candidate  
+- `tenant_id != NULL` → tenant member (admin, recruiter, client)
+
+### jobs  
+Tenant-owned job requisitions, including salary, skills, and spec in structured fields.
+
+### candidates  
+Candidate profiles (global or tenant-imported).
+
+- EEO-blind `public_id` for portals  
+- Skills, experience, resume metadata stored in `jsonb`  
+- Optional `user_id` link  
+
+### applications  
+Links jobs ↔ candidates.
+
+- Tracks pipeline stage  
+- Stores `match_score`, score, and notes  
+- Enforces uniqueness per `job_id` + `candidate_id`  
+
+### stages  
+Tenant-specific pipeline steps (ordered).
+
+### events  
+Audit log for compliance and debugging (views, updates, AI operations).
+
+### skills  
+Optional normalized skill taxonomy.
+
+### job_application_feedback  
+Structured reviewer feedback on applications.
+
+All tables include **RLS** to enforce tenant isolation and candidate visibility rules:
+
+- Tenants only see their own jobs, stages, events, and feedback  
+- Candidates see only their own data  
+- Tenants see candidates they imported or who applied to their jobs  
+- Global candidate pool is visible only to internal `super_admin` roles  
+
+---
+
+# Phase 1 Roadmap (High-Level)
+
+## 1. Authentication & Roles
+
+- Supabase auth (signup, login, logout)  
+- Map `auth.users` → `users` table with roles: `super_admin`, `admin`, `recruiter`, `client`, `candidate`  
+- Candidate sign-up without tenant (global candidates)  
+- Tenant onboarding and invitation flow for admins/recruiters  
+- Protected routes and auth-aware layout  
+- Password reset and email verification  
+
+## 2. Resume Parsing & Profile Enrichment
+
+- Integrate PDF/DOC/DOCX parsing  
+- Text extraction for resume content  
+- Basic NLP-based skill extraction (tech-first)  
+- Extract education, experience, and contact info into `jsonb` fields  
+- Store resume files in Supabase Storage with signed URLs  
+- (Later) LinkedIn/profile sync for global candidates  
+
+## 3. Matching Engine & Pool Gauge
+
+- Design v1 matching algorithm:
+
+  - Skill overlap (required vs possessed)  
+  - Experience alignment  
+  - Leniency slider → thresholds  
+  - Dealbreaker handling  
+
+- Persist `match_score` (0–100) on applications  
+- Internal APIs for:
+
+  - finding matches for a job  
+  - estimating global pool size (candidate pool gauge)  
+
+- EEO-blind shortlist output for client portal  
+
+## 4. Core ATS Flows
+
+- Employer/agency dashboard to manage jobs  
+- Candidate application flow wired to `applications`  
+- Pipeline stage transitions (drag-and-drop or action buttons)  
+- Feedback capture via `job_application_feedback`  
+- Basic event logging into `events`  
+
+## 5. UX / DX Improvements
+
+- Loading states, skeletons, and error boundaries  
+- Toast notifications and validation messages  
+- Mobile-responsive layouts  
+- Dark mode (late Phase 1 / early Phase 2)  
+- Developer ergonomics:
+
+  - Stronger types in `lib/supabase.ts`  
+  - Shared Zod schemas for API payloads  
+
+---
+
+# Extending the Project
+
+## Adding a New Component
+
+- Create the component in `components/`  
+- Use TypeScript for type safety  
+- Follow existing design patterns (Tailwind classes, minimal props)  
+- Export and import it into the relevant page or layout  
+
+## Adding a New Database Table
+
+1. Create a migration in `supabase/migrations/` with a descriptive file name, e.g.:
+
+       YYYYMMDDHHMMSS_create_<table_name>.sql
+
+2. Include in the migration:
+
+   - `CREATE TABLE ...`  
+   - `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`  
+   - `CREATE POLICY ...` for RLS  
+   - Relevant indexes  
+
+3. Add/update TypeScript types and any Zod schemas as needed.
+
+## Adding a New Page
+
+- Create a folder/file under `app/`  
+- Export a default React component  
+- Add `'use client'` where client-side interactivity is required  
+- Link it from navigation or route to it directly  
+
+---
+
+# Security Notes
+
+- All database tables have **Row Level Security (RLS)** enabled  
+- Tenant isolation is enforced via JWT claims (`tenant_id`, `role`, `user_id`)  
+- Candidates can only see their own data  
+- Recruiters/clients can only see:
+
+  - candidates they imported, or  
+  - candidates who applied to their jobs  
+
+- Global candidate pool visibility is limited to `super_admin` (internal usage)  
+- Supabase handles authentication; always validate file uploads and user inputs in production  
+
+---
+
+# Known Limitations (Phase 0 → Early Phase 1)
+
+- Resume parsing uses placeholder logic  
+- Matching logic is stubbed or mock-based  
+- Auth may still be partially wired (not production-ready)  
+- Salary and market comparison data is hardcoded  
+- Limited error handling and observability  
+- No production email notifications or interview scheduling yet  
+- Global candidate pool search & pool gauge are not wired to the UI  
+
+---
+
+# Contributing
+
+During Phase 0 / early Phase 1, please:
+
+- Follow the roadmap priorities  
+- Maintain strict TypeScript usage where possible  
+- Write tests for any non-trivial logic  
+- Keep `/docs` in sync with real behavior  
+- Follow existing folder structure and naming patterns  
+
+---
+
+# License
+
+**Proprietary – All rights reserved.**

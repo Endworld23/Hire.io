@@ -1,3 +1,6 @@
+// Database types aligned with supabase/migrations/20251206030000_consolidate_schema.sql.
+// Keep this in sync with the consolidated schema migration.
+
 export type Json =
   | string
   | number
@@ -11,252 +14,326 @@ export type Database = {
     Tables: {
       tenants: {
         Row: {
+          created_at: string | null
           id: string
           name: string
+          settings: Json | null
           subdomain: string | null
-          settings: Json
-          created_at: string
         }
         Insert: {
+          created_at?: string | null
           id?: string
           name: string
+          settings?: Json | null
           subdomain?: string | null
-          settings?: Json
-          created_at?: string
         }
         Update: {
+          created_at?: string | null
           id?: string
           name?: string
+          settings?: Json | null
           subdomain?: string | null
-          settings?: Json
-          created_at?: string
         }
       }
       users: {
         Row: {
-          id: string
-          tenant_id: string
-          role: 'admin' | 'recruiter' | 'client' | 'candidate'
+          created_at: string | null
           email: string
           full_name: string | null
-          metadata: Json
-          created_at: string
+          id: string
+          metadata: Json | null
+          role: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
+          tenant_id: string | null
         }
         Insert: {
-          id: string
-          tenant_id: string
-          role: 'admin' | 'recruiter' | 'client' | 'candidate'
+          created_at?: string | null
           email: string
           full_name?: string | null
-          metadata?: Json
-          created_at?: string
+          id: string
+          metadata?: Json | null
+          role: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
+          tenant_id?: string | null
         }
         Update: {
-          id?: string
-          tenant_id?: string
-          role?: 'admin' | 'recruiter' | 'client' | 'candidate'
+          created_at?: string | null
           email?: string
           full_name?: string | null
-          metadata?: Json
-          created_at?: string
+          id?: string
+          metadata?: Json | null
+          role?: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
+          tenant_id?: string | null
         }
       }
       jobs: {
         Row: {
+          created_at: string | null
+          created_by: string | null
           id: string
+          location: string | null
+          nice_to_have: Json | null
+          required_skills: Json | null
+          salary_max: number | null
+          salary_min: number | null
+          spec: Json | null
+          status: 'draft' | 'active' | 'closed' | 'archived'
           tenant_id: string
           title: string
-          location: string | null
-          salary_min: number | null
-          salary_max: number | null
-          required_skills: Json
-          nice_to_have: Json
-          spec: Json
-          status: 'draft' | 'active' | 'closed'
-          created_by: string | null
-          created_at: string
         }
         Insert: {
+          created_at?: string | null
+          created_by?: string | null
           id?: string
+          location?: string | null
+          nice_to_have?: Json | null
+          required_skills?: Json | null
+          salary_max?: number | null
+          salary_min?: number | null
+          spec?: Json | null
+          status?: 'draft' | 'active' | 'closed' | 'archived'
           tenant_id: string
           title: string
-          location?: string | null
-          salary_min?: number | null
-          salary_max?: number | null
-          required_skills?: Json
-          nice_to_have?: Json
-          spec?: Json
-          status?: 'draft' | 'active' | 'closed'
-          created_by?: string | null
-          created_at?: string
         }
         Update: {
+          created_at?: string | null
+          created_by?: string | null
           id?: string
+          location?: string | null
+          nice_to_have?: Json | null
+          required_skills?: Json | null
+          salary_max?: number | null
+          salary_min?: number | null
+          spec?: Json | null
+          status?: 'draft' | 'active' | 'closed' | 'archived'
           tenant_id?: string
           title?: string
-          location?: string | null
-          salary_min?: number | null
-          salary_max?: number | null
-          required_skills?: Json
-          nice_to_have?: Json
-          spec?: Json
-          status?: 'draft' | 'active' | 'closed'
-          created_by?: string | null
-          created_at?: string
         }
       }
       candidates: {
         Row: {
+          created_at: string | null
+          email: string | null
+          experience: Json | null
+          full_name: string | null
           id: string
-          tenant_id: string
-          user_id: string | null
-          public_id: string
-          full_name: string
-          email: string
-          phone: string | null
+          is_global: boolean | null
           location: string | null
-          skills: Json
-          experience: Json
-          resume_url: string | null
+          owner_tenant_id: string | null
+          phone: string | null
+          public_id: string | null
           resume_text: string | null
-          created_at: string
+          resume_url: string | null
+          skills: Json | null
+          user_id: string | null
+          visibility: Json | null
         }
         Insert: {
+          created_at?: string | null
+          email?: string | null
+          experience?: Json | null
+          full_name?: string | null
           id?: string
-          tenant_id: string
-          user_id?: string | null
-          public_id?: string
-          full_name: string
-          email: string
-          phone?: string | null
+          is_global?: boolean | null
           location?: string | null
-          skills?: Json
-          experience?: Json
-          resume_url?: string | null
+          owner_tenant_id?: string | null
+          phone?: string | null
+          public_id?: string | null
           resume_text?: string | null
-          created_at?: string
+          resume_url?: string | null
+          skills?: Json | null
+          user_id?: string | null
+          visibility?: Json | null
         }
         Update: {
+          created_at?: string | null
+          email?: string | null
+          experience?: Json | null
+          full_name?: string | null
           id?: string
-          tenant_id?: string
-          user_id?: string | null
-          public_id?: string
-          full_name?: string
-          email?: string
-          phone?: string | null
+          is_global?: boolean | null
           location?: string | null
-          skills?: Json
-          experience?: Json
-          resume_url?: string | null
+          owner_tenant_id?: string | null
+          phone?: string | null
+          public_id?: string | null
           resume_text?: string | null
-          created_at?: string
+          resume_url?: string | null
+          skills?: Json | null
+          user_id?: string | null
+          visibility?: Json | null
         }
       }
       applications: {
         Row: {
-          id: string
-          tenant_id: string
-          job_id: string
           candidate_id: string
-          stage: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected'
-          score: number | null
+          created_at: string | null
+          id: string
+          job_id: string
+          match_score: number | null
           notes: string | null
-          created_at: string
+          score: number | null
+          stage:
+            | 'new'
+            | 'applied'
+            | 'recruiter_screen'
+            | 'screening'
+            | 'submitted_to_client'
+            | 'client_shortlisted'
+            | 'client_rejected'
+            | 'interview'
+            | 'offer'
+            | 'hired'
+            | 'rejected'
+          tenant_id: string
         }
         Insert: {
-          id?: string
-          tenant_id: string
-          job_id: string
           candidate_id: string
-          stage?: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected'
-          score?: number | null
+          created_at?: string | null
+          id?: string
+          job_id: string
+          match_score?: number | null
           notes?: string | null
-          created_at?: string
+          score?: number | null
+          stage?:
+            | 'new'
+            | 'applied'
+            | 'recruiter_screen'
+            | 'screening'
+            | 'submitted_to_client'
+            | 'client_shortlisted'
+            | 'client_rejected'
+            | 'interview'
+            | 'offer'
+            | 'hired'
+            | 'rejected'
+          tenant_id: string
         }
         Update: {
-          id?: string
-          tenant_id?: string
-          job_id?: string
           candidate_id?: string
-          stage?: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected'
-          score?: number | null
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          match_score?: number | null
           notes?: string | null
-          created_at?: string
+          score?: number | null
+          stage?:
+            | 'new'
+            | 'applied'
+            | 'recruiter_screen'
+            | 'screening'
+            | 'submitted_to_client'
+            | 'client_shortlisted'
+            | 'client_rejected'
+            | 'interview'
+            | 'offer'
+            | 'hired'
+            | 'rejected'
+          tenant_id?: string
         }
       }
       stages: {
         Row: {
+          created_at: string | null
           id: string
-          tenant_id: string
           name: string
           order: number
-          created_at: string
+          tenant_id: string
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          tenant_id: string
           name: string
           order: number
-          created_at?: string
+          tenant_id: string
         }
         Update: {
+          created_at?: string | null
           id?: string
-          tenant_id?: string
           name?: string
           order?: number
-          created_at?: string
+          tenant_id?: string
         }
       }
       events: {
         Row: {
-          id: string
-          tenant_id: string
-          actor_user_id: string | null
-          entity_type: string
-          entity_id: string | null
           action: string
-          metadata: Json
-          created_at: string
+          actor_user_id: string | null
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          tenant_id: string
         }
         Insert: {
-          id?: string
-          tenant_id: string
-          actor_user_id?: string | null
-          entity_type: string
-          entity_id?: string | null
           action: string
-          metadata?: Json
-          created_at?: string
+          actor_user_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          tenant_id: string
         }
         Update: {
-          id?: string
-          tenant_id?: string
-          actor_user_id?: string | null
-          entity_type?: string
-          entity_id?: string | null
           action?: string
-          metadata?: Json
-          created_at?: string
+          actor_user_id?: string | null
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          tenant_id?: string
         }
       }
       skills: {
         Row: {
+          category: string | null
+          created_at: string | null
           id: string
           name: string
-          category: string | null
-          created_at: string
         }
         Insert: {
+          category?: string | null
+          created_at?: string | null
           id?: string
           name: string
-          category?: string | null
-          created_at?: string
         }
         Update: {
+          category?: string | null
+          created_at?: string | null
           id?: string
           name?: string
-          category?: string | null
-          created_at?: string
+        }
+      }
+      job_application_feedback: {
+        Row: {
+          application_id: string
+          author_user_id: string | null
+          comment: string
+          created_at: string | null
+          id: string
+          job_id: string
+          rating: number | null
+          tenant_id: string
+        }
+        Insert: {
+          application_id: string
+          author_user_id?: string | null
+          comment: string
+          created_at?: string | null
+          id?: string
+          job_id: string
+          rating?: number | null
+          tenant_id: string
+        }
+        Update: {
+          application_id?: string
+          author_user_id?: string | null
+          comment?: string
+          created_at?: string | null
+          id?: string
+          job_id?: string
+          rating?: number | null
+          tenant_id?: string
         }
       }
     }
@@ -272,9 +349,9 @@ export type Database = {
   }
 }
 
-export type Role = 'admin' | 'recruiter' | 'client' | 'candidate'
-export type JobStatus = 'draft' | 'active' | 'closed'
-export type ApplicationStage = 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected'
+export type Role = Database['public']['Tables']['users']['Row']['role']
+export type JobStatus = Database['public']['Tables']['jobs']['Row']['status']
+export type ApplicationStage = Database['public']['Tables']['applications']['Row']['stage']
 
 export type Tenant = Database['public']['Tables']['tenants']['Row']
 export type User = Database['public']['Tables']['users']['Row']
@@ -284,3 +361,4 @@ export type Application = Database['public']['Tables']['applications']['Row']
 export type Stage = Database['public']['Tables']['stages']['Row']
 export type Event = Database['public']['Tables']['events']['Row']
 export type Skill = Database['public']['Tables']['skills']['Row']
+export type JobApplicationFeedback = Database['public']['Tables']['job_application_feedback']['Row']
