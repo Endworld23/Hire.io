@@ -283,7 +283,7 @@ export default function NewJobPage() {
 
   const applySuggestedQuestions = () => {
     if (!formState.aiSuggestedQuestions.length) return
-    updateFormData('screeningQuestions', formState.aiSuggestedQuestions)
+    setFieldValue('screeningQuestions', formState.aiSuggestedQuestions)
     setCurrentStep(4)
   }
 

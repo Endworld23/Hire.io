@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getJobForEdit } from '@/lib/actions/jobs'
 import { JobEditForm } from './job-edit-form'
 import { archiveJobAction } from '../job-actions'
+import { contractTypeSchema, type ContractType } from '@hire-io/schemas'
 
 type PageProps = {
   params: {
@@ -17,6 +18,10 @@ export default async function JobEditPage({ params }: PageProps) {
     notFound()
   }
 
+  const contractType: ContractType | '' = contractTypeSchema.options.includes(job.contractType as ContractType)
+    ? (job.contractType as ContractType)
+    : ''
+
   const initialValues = {
     title: job.title,
     description: job.description,
@@ -30,7 +35,7 @@ export default async function JobEditPage({ params }: PageProps) {
     salaryMax: job.salaryMax?.toString() || '',
     hourlyRateMin: job.hourlyRateMin?.toString() || '',
     hourlyRateMax: job.hourlyRateMax?.toString() || '',
-    contractType: job.contractType || '',
+    contractType,
     intakeSummary: job.intakeSummary || '',
     idealCandidateProfile: job.idealCandidateProfile || '',
     aiSuggestedQuestionsText: job.aiSuggestedQuestions.join('\n'),

@@ -7,19 +7,6 @@ import { getCurrentUserProfile } from '@/lib/server-user'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-type JobRecord = {
-  id: string
-  tenant_id: string
-  required_skills: string[]
-  nice_to_have: string[]
-  spec: {
-    experienceLevel?: string
-    matchSettings?: {
-      leniency?: number
-    }
-  }
-}
-
 type ApplicationRecord = {
   id: string
   candidate: {
