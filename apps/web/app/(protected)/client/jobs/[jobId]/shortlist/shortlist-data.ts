@@ -2,7 +2,7 @@
 
 import { randomUUID } from 'crypto'
 import { notFound } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@hire-io/utils'
 import { requireClientUser } from '@/lib/server-user'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -37,7 +37,7 @@ export async function getClientShortlist(jobId: string): Promise<ClientShortlist
     notFound()
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
   const { data: job } = await supabase
     .from('jobs')

@@ -3,7 +3,7 @@
 
 import { Buffer } from 'node:buffer'
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient, type SupabaseClient } from '@hire-io/utils'
 import { eeoCandidateIntakeSchema, applicationStageSchema } from '@hire-io/schemas'
 import { getCurrentUserProfile } from '@/lib/server-user'
 import { recomputeMatchesForJob } from '@/lib/actions/matching'
@@ -83,7 +83,7 @@ export async function addCandidateAction(
 
   const fileArrayBuffer = await resumeFile.arrayBuffer()
   const fileBuffer = Buffer.from(fileArrayBuffer)
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
   const { data: job } = await supabase
     .from('jobs')
@@ -147,7 +147,8 @@ export async function addCandidateAction(
   const { data: candidate, error: candidateError } = await supabase
     .from('candidates')
     .insert({
-      tenant_id: user.tenant_id,
+      owner_tenant_id: user.tenant_id,
+      is_global: false,
       full_name: parsedIntake.data.alias,
       email: maskedEmail,
       phone: null,
@@ -240,7 +241,7 @@ async function uploadResumeFile({
   file,
   buffer,
 }: {
-  supabase: ReturnType<typeof createClient>
+  supabase: SupabaseClient
   tenantId: string
   jobId: string
   file: File

@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@hire-io/utils'
 import { z } from 'zod'
 import { applicationStageSchema } from '@hire-io/schemas'
 import { getCurrentUserProfile } from '@/lib/server-user'
@@ -24,7 +24,7 @@ export async function updateApplicationStage(applicationId: string, stage: strin
     return { success: false, error: 'Unauthorized' }
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
   const { data: application } = await supabase
     .from('applications')
@@ -90,7 +90,7 @@ export async function addApplicationFeedback(formData: FormData) {
     throw new Error('Unauthorized')
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
   const { data: application } = await supabase
     .from('applications')

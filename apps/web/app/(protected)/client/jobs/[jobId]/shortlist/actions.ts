@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@hire-io/utils'
 import { requireClientUser } from '@/lib/server-user'
 import { applicationStageSchema } from '@hire-io/schemas'
 
@@ -29,7 +29,7 @@ export async function updateShortlistDecision({
     return { error: 'Unauthorized' }
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
   const { data: application } = await supabase
     .from('applications')

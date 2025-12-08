@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@hire-io/utils'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const supabase = createClient(supabaseUrl, supabaseServiceKey)
+      const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
       const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken)
 
@@ -82,7 +82,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
     if (accessToken) {
       try {
-        const supabase = createClient(supabaseUrl, supabaseServiceKey)
+        const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
         const { data: { user } } = await supabase.auth.getUser(accessToken)
 
         if (user) {

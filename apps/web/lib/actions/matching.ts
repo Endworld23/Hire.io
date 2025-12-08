@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@hire-io/utils'
 import { calculateMatchScore } from '@/lib/matching-engine'
 import { getCurrentUserProfile } from '@/lib/server-user'
 
@@ -23,7 +23,7 @@ export async function recomputeMatchesForJob(jobId: string, tenantId?: string) {
     return
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
   const { data: job } = await supabase
     .from('jobs')

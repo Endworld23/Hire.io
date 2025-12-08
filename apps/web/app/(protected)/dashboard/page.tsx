@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@hire-io/utils'
 import { redirect } from 'next/navigation'
 import { signOut } from '@/lib/actions/auth'
 
@@ -14,7 +14,7 @@ async function getDashboardData() {
     redirect('/sign-in')
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
   const { data: { user } } = await supabase.auth.getUser(accessToken)
 
   if (!user) {
@@ -41,7 +41,7 @@ async function getDashboardData() {
   const { data: candidates } = await supabase
     .from('candidates')
     .select('*')
-    .eq('tenant_id', userProfile.tenant_id)
+    .eq('owner_tenant_id', userProfile.tenant_id)
     .order('created_at', { ascending: false })
     .limit(5)
 
