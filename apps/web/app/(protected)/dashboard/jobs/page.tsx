@@ -73,7 +73,7 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
           ) : (
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
               <ul className="divide-y divide-gray-200">
-                {jobs.map((job) => (
+                {jobs.map((job: any) => (
                   <li key={job.id}>
                     <Link href={`/dashboard/jobs/${job.id}`} className="block hover:bg-gray-50">
                       <div className="px-4 py-4 sm:px-6">

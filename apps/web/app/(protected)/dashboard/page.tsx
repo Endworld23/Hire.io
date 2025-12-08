@@ -115,7 +115,7 @@ export default async function DashboardPage() {
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">Active Jobs</dt>
                       <dd className="text-2xl font-semibold text-gray-900">
-                        {data.jobs.filter(j => j.status === 'active').length}
+                        {data.jobs.filter((j: any) => j.status === 'active').length}
                       </dd>
                     </dl>
                   </div>
