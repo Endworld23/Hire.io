@@ -89,7 +89,7 @@ export async function getClientShortlist(jobId: string): Promise<ClientShortlist
   const requiredSkills = Array.isArray(job.required_skills) ? job.required_skills : []
   const niceToHave = Array.isArray(job.nice_to_have) ? job.nice_to_have : []
 
-  const candidates = (applications || []).map(application =>
+  const candidates = (applications || []).map((application: any) =>
     toClientShortlistCandidate({
       application,
       requiredSkills,
