@@ -5,9 +5,8 @@ import { createSupabaseClient } from '@hire-io/utils'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
-
   const accessToken = request.cookies.get('sb-access-token')?.value
 
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/client') || pathname.startsWith('/candidate')) {
@@ -17,7 +16,6 @@ export async function middleware(request: NextRequest) {
 
     try {
       const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
-
       const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken)
 
       if (userError || !user) {
@@ -74,7 +72,7 @@ export async function middleware(request: NextRequest) {
 
       return response
     } catch (error) {
-      console.error('Middleware error:', error)
+      console.error('Proxy error:', error)
       return NextResponse.redirect(new URL('/sign-in', request.url))
     }
   }

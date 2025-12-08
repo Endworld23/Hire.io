@@ -1,2 +1,8 @@
+# Next.js build output
+.next/
+apps/web/.next/
+# TypeScript build info
+*.tsbuildinfo
+# Dependencies
 node_modules/
 .env
