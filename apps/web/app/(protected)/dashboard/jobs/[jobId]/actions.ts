@@ -83,7 +83,7 @@ export async function addCandidateAction(
 
   const fileArrayBuffer = await resumeFile.arrayBuffer()
   const fileBuffer = Buffer.from(fileArrayBuffer)
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: job } = await supabase
     .from('jobs')

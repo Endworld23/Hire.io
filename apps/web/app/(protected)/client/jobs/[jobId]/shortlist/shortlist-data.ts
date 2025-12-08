@@ -37,7 +37,7 @@ export async function getClientShortlist(jobId: string): Promise<ClientShortlist
     notFound()
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: job } = await supabase
     .from('jobs')

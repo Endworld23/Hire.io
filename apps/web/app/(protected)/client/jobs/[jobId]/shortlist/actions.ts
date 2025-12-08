@@ -29,7 +29,7 @@ export async function updateShortlistDecision({
     return { error: 'Unauthorized' }
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: application } = await supabase
     .from('applications')

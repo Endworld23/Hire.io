@@ -14,7 +14,7 @@ async function getDashboardData() {
     redirect('/sign-in')
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
   const { data: { user } } = await supabase.auth.getUser(accessToken)
 
   if (!user) {

@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+      const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
       const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken)
 
@@ -82,7 +82,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
     if (accessToken) {
       try {
-        const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+        const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
         const { data: { user } } = await supabase.auth.getUser(accessToken)
 
         if (user) {

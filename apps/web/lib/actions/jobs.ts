@@ -141,7 +141,7 @@ Return strict JSON matching the schema.`
       return { error: 'AI output invalid', details: structured.error.flatten() }
     }
 
-    const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
     await supabase.from('events').insert({
       tenant_id: user.tenant_id,
       actor_user_id: user.id,
@@ -175,7 +175,7 @@ export async function createJob(jobData: CreateJobInput) {
   }
 
   try {
-    const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
     const { data: job, error: jobError } = await supabase
       .from('jobs')
@@ -228,7 +228,7 @@ export async function listJobs() {
     redirect('/sign-in')
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: jobs, error } = await supabase
     .from('jobs')
@@ -255,7 +255,7 @@ export async function getJob(jobId: string) {
     return null
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: job, error } = await supabase
     .from('jobs')
@@ -325,7 +325,7 @@ export async function getJobForEdit(jobId: string): Promise<JobEditData | null> 
     return null
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
   const { data: job, error } = await supabase
     .from('jobs')
     .select('id, tenant_id, title, location, salary_min, salary_max, status, required_skills, nice_to_have, spec')
@@ -380,7 +380,7 @@ export async function updateJob(jobId: string, jobData: CreateJobInput) {
     }
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: existing } = await supabase
     .from('jobs')
@@ -439,7 +439,7 @@ export async function archiveJob(jobId: string) {
     return { success: false, error: 'Unauthorized' }
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: job, error } = await supabase
     .from('jobs')
@@ -513,7 +513,7 @@ export async function getJobMetrics(jobId: string): Promise<JobMetrics | null> {
     return null
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: applications, error } = await supabase
     .from('applications')

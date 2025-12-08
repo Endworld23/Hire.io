@@ -23,7 +23,7 @@ export async function recomputeMatchesForJob(jobId: string, tenantId?: string) {
     return
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: job } = await supabase
     .from('jobs')

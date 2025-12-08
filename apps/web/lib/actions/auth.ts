@@ -14,7 +14,7 @@ function getSupabase() {
     auth: {
       persistSession: false,
     }
-  })
+  }) as any
 }
 
 export async function signUp(data: SignUpInput) {
@@ -49,7 +49,7 @@ export async function signUp(data: SignUpInput) {
         persistSession: false,
       }
     }
-  )
+  ) as any
 
   const { data: tenant, error: tenantError } = await supabaseAdmin
     .from('tenants')
@@ -136,7 +136,7 @@ export async function signIn(data: SignInInput) {
   const supabaseAdmin = createSupabaseClient(
     supabaseUrl,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  ) as any
 
   const { data: user } = await supabaseAdmin
     .from('users')

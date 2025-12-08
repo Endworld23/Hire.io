@@ -24,7 +24,7 @@ export async function updateApplicationStage(applicationId: string, stage: strin
     return { success: false, error: 'Unauthorized' }
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: application } = await supabase
     .from('applications')
@@ -90,7 +90,7 @@ export async function addApplicationFeedback(formData: FormData) {
     throw new Error('Unauthorized')
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey)
+  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
 
   const { data: application } = await supabase
     .from('applications')
