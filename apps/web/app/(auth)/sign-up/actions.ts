@@ -7,6 +7,11 @@ type SignUpResult = {
   success: boolean
   fieldErrors?: Record<string, string>
   formError?: string
+  values?: {
+    fullName?: string
+    companyName?: string
+    email?: string
+  }
 }
 
 type SignUpValues = {
@@ -21,7 +26,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 function validateSignUpForm(formData: FormData): {
-  values: SignUpValues | null
+  values: SignUpValues
   errors: Record<string, string>
 } {
   const fullName = String(formData.get('fullName') ?? '').trim()
@@ -51,13 +56,9 @@ function validateSignUpForm(formData: FormData): {
     errors.password = 'Password must be at least 8 characters.'
   }
 
-  if (Object.keys(errors).length > 0) {
-    return { values: null, errors }
-  }
-
   return {
     values: { fullName, companyName, email, password },
-    errors: {},
+    errors,
   }
 }
 
@@ -99,8 +100,16 @@ export async function signUpWithTenant(
 ): Promise<SignUpResult> {
   const { values, errors } = validateSignUpForm(formData)
 
-  if (!values) {
-    return { success: false, fieldErrors: errors }
+  if (Object.keys(errors).length > 0) {
+    return {
+      success: false,
+      fieldErrors: errors,
+      values: {
+        fullName: values.fullName,
+        companyName: values.companyName,
+        email: values.email,
+      },
+    }
   }
 
   const { fullName, companyName, email, password } = values
@@ -117,6 +126,11 @@ export async function signUpWithTenant(
     return {
       success: false,
       formError: 'Server configuration error. Please try again later.',
+      values: {
+        fullName,
+        companyName,
+        email,
+      },
     }
   }
 
@@ -132,6 +146,11 @@ export async function signUpWithTenant(
     return {
       success: false,
       formError: signUpError.message ?? 'Unable to create account.',
+      values: {
+        fullName,
+        companyName,
+        email,
+      },
     }
   }
 
@@ -142,6 +161,11 @@ export async function signUpWithTenant(
     return {
       success: false,
       formError: 'Unable to create account. Please try again.',
+      values: {
+        fullName,
+        companyName,
+        email,
+      },
     }
   }
 
@@ -157,6 +181,11 @@ export async function signUpWithTenant(
       success: false,
       formError:
         'Failed to create your organization. Please contact support if this persists.',
+      values: {
+        fullName,
+        companyName,
+        email,
+      },
     }
   }
 
@@ -174,6 +203,11 @@ export async function signUpWithTenant(
       success: false,
       formError:
         'Failed to create your user profile. Please contact support if this persists.',
+      values: {
+        fullName,
+        companyName,
+        email,
+      },
     }
   }
 
@@ -192,6 +226,11 @@ export async function signUpWithTenant(
       success: false,
       formError:
         'Your account was created, but we could not finish setup. Please contact support.',
+      values: {
+        fullName,
+        companyName,
+        email,
+      },
     }
   }
 
