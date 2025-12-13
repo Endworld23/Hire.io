@@ -3,8 +3,9 @@ import { AuthHashRedirect } from './components/auth-hash-redirect'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50">
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-gray-50">
       <AuthHashRedirect />
+
       <div className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <h1 className="text-6xl font-bold text-gray-900 mb-4">
@@ -26,7 +27,7 @@ export default function Home() {
               href="/demo"
               className="inline-block w-full px-6 py-3 bg-blue-600 text-white text-center font-semibold rounded-lg hover:bg-blue-700 transition-colors"
             >
-              Launch Demo
+              Launch Demo →
             </Link>
           </div>
 
@@ -38,8 +39,10 @@ export default function Home() {
               extension points.
             </p>
             <a
-              href="https://github.com"
+              href="https://github.com/Endworld23/Hire.io"
               className="inline-block w-full px-6 py-3 bg-gray-200 text-gray-800 text-center font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              target="_blank"
+              rel="noreferrer"
             >
               View README
             </a>
@@ -48,35 +51,38 @@ export default function Home() {
 
         <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200 mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Platform Features</h2>
+
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <div className="text-3xl">🏢</div>
               <h3 className="font-semibold text-gray-900">Employer Tools</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>Job intake wizard</li>
-                <li>Leniency slider</li>
-                <li>Salary gauge</li>
-                <li>Anonymized candidates</li>
+                <li>• Job intake wizard</li>
+                <li>• Leniency slider</li>
+                <li>• Salary gauge</li>
+                <li>• Anonymized candidates</li>
               </ul>
             </div>
+
             <div className="space-y-2">
               <div className="text-3xl">👤</div>
               <h3 className="font-semibold text-gray-900">Candidate Tools</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>Profile builder</li>
-                <li>Resume upload</li>
-                <li>Auto-parsing</li>
-                <li>Skill extraction</li>
+                <li>• Profile builder</li>
+                <li>• Resume upload</li>
+                <li>• Auto-parsing</li>
+                <li>• Skill extraction</li>
               </ul>
             </div>
+
             <div className="space-y-2">
               <div className="text-3xl">🤖</div>
               <h3 className="font-semibold text-gray-900">AI Matching</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>Match scoring</li>
-                <li>Bias reduction</li>
-                <li>Smart shortlists</li>
-                <li>Feedback loops</li>
+                <li>• Match scoring</li>
+                <li>• Bias reduction</li>
+                <li>• Smart shortlists</li>
+                <li>• Feedback loops</li>
               </ul>
             </div>
           </div>
@@ -87,7 +93,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-4 text-sm text-blue-800">
             <div>
               <p className="font-medium mb-1">Frontend:</p>
-              <p>Next.js 16, React, TypeScript, Tailwind CSS</p>
+              <p>Next.js 16, React 19, TypeScript, Tailwind CSS v4</p>
             </div>
             <div>
               <p className="font-medium mb-1">Backend:</p>
