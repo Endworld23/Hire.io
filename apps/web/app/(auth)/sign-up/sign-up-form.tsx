@@ -6,6 +6,7 @@ type SignUpFormState = {
   success: boolean
   fieldErrors?: Record<string, string>
   formError?: string
+  needsEmailConfirmation?: boolean
   values?: {
     fullName?: string
     companyName?: string
@@ -23,6 +24,18 @@ export function SignUpForm({ action, initialState }: SignUpFormProps) {
 
   return (
     <form className="mt-8 space-y-6" action={formAction}>
+      {state?.needsEmailConfirmation && (
+        <div className="rounded-md bg-green-50 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-green-800">
+                Account created. Please check your email to confirm your account, then sign in.
+              </h3>
+            </div>
+          </div>
+        </div>
+      )}
+
       {state?.formError && (
         <div className="rounded-md bg-red-50 p-4">
           <div className="flex">

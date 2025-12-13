@@ -7,6 +7,7 @@ type SignUpResult = {
   success: boolean
   fieldErrors?: Record<string, string>
   formError?: string
+  needsEmailConfirmation?: boolean
   values?: {
     fullName?: string
     companyName?: string
@@ -154,10 +155,28 @@ export async function signUpWithTenant(
     }
   }
 
-  const user = signUpData.user
+  let user = signUpData.user
+  let session = signUpData.session
+
+  // If email confirmation is on, session may be null. Try immediate sign-in.
+  if (!session) {
+    const { data: signInData, error: signInError } = await anonClient.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (signInError) {
+      console.error('Supabase signIn after signUp error:', signInError)
+    }
+
+    session = signInData?.session ?? null
+    if (!user && signInData?.user) {
+      user = signInData.user
+    }
+  }
 
   if (!user) {
-    console.error('Supabase signUp returned no user object.')
+    console.error('Supabase signUp/signIn returned no user object.')
     return {
       success: false,
       formError: 'Unable to create account. Please try again.',
@@ -234,5 +253,17 @@ export async function signUpWithTenant(
     }
   }
 
-  redirect('/dashboard')
+  if (session) {
+    redirect('/dashboard')
+  }
+
+  return {
+    success: true,
+    needsEmailConfirmation: true,
+    values: {
+      fullName,
+      companyName,
+      email,
+    },
+  }
 }
