@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createSupabaseClient, type SupabaseClient } from '@hire-io/utils'
+import { createServerSupabase } from '@/lib/supabase-server'
 
 type SignUpResult = {
   success: boolean
@@ -63,30 +64,6 @@ function validateSignUpForm(formData: FormData): {
   }
 }
 
-function getSupabaseClients(): {
-  anon: SupabaseClient
-  service: SupabaseClient
-} {
-  if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
-    throw new Error('Missing Supabase environment variables')
-  }
-
-  const anon = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-    },
-  })
-
-  const service = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  })
-
-  return { anon, service }
-}
-
 /**
  * Server action used by the sign-up form.
  *
@@ -115,13 +92,21 @@ export async function signUpWithTenant(
 
   const { fullName, companyName, email, password } = values
 
-  let anonClient: SupabaseClient
+  let anonClient: Awaited<ReturnType<typeof createServerSupabase>>
   let serviceClient: SupabaseClient
 
   try {
-    const clients = getSupabaseClients()
-    anonClient = clients.anon
-    serviceClient = clients.service
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+      throw new Error('Missing Supabase environment variables')
+    }
+
+    anonClient = await createServerSupabase()
+    serviceClient = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
   } catch (error) {
     console.error('Supabase configuration error:', error)
     return {

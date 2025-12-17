@@ -1,7 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { createSupabaseClient } from '@hire-io/utils'
+import { createServerSupabase } from '@/lib/supabase-server'
 
 type SignInResult = {
   success: boolean
@@ -11,18 +11,6 @@ type SignInResult = {
   values?: {
     email?: string
   }
-}
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-function getAnonClient() {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables')
-  }
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    auth: { persistSession: false },
-  })
 }
 
 function validateSignIn(formData: FormData): {
@@ -57,17 +45,7 @@ export async function signInWithPassword(formData: FormData): Promise<SignInResu
     }
   }
 
-  let supabase
-  try {
-    supabase = getAnonClient()
-  } catch (error) {
-    console.error('Supabase configuration error:', error)
-    return {
-      success: false,
-      formError: 'Server configuration error. Please try again later.',
-      values: { email },
-    }
-  }
+  const supabase = await createServerSupabase()
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -107,17 +85,7 @@ export async function resendConfirmationEmail(formData: FormData): Promise<SignI
     }
   }
 
-  let supabase
-  try {
-    supabase = getAnonClient()
-  } catch (error) {
-    console.error('Supabase configuration error:', error)
-    return {
-      success: false,
-      formError: 'Server configuration error. Please try again later.',
-      values: { email },
-    }
-  }
+  const supabase = await createServerSupabase()
 
   const { error } = await supabase.auth.resend({
     type: 'signup',
