@@ -12,7 +12,8 @@
       "@/*": ["./*"],
       "@hire-io/schemas": ["../../packages/schemas/src"],
       "@hire-io/utils": ["../../packages/utils/src"],
-      "@hire-io/ui": ["../../packages/ui/src"]
+      "@hire-io/ui": ["../../packages/ui/src"],
+      "lucide-react": ["./lib/lucide-react"]
     }
   },
   "include": [
