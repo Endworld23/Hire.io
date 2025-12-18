@@ -1,7 +1,6 @@
 'use server'
 
-import { redirect } from 'next/navigation'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, withTimeout } from '@/lib/supabase-server'
 
 type SignInResult = {
   success: boolean
@@ -45,9 +44,34 @@ export async function signInWithPassword(formData: FormData): Promise<SignInResu
     }
   }
 
-  const supabase = await createServerSupabase()
+  console.log('[sign-in] start')
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  let data
+  let error
+  try {
+    const supabase = await createServerSupabase()
+    console.log('[sign-in] calling supabase')
+    const result = await withTimeout(
+      supabase.auth.signInWithPassword({ email, password }),
+      10_000,
+      'signInWithPassword'
+    )
+    data = result.data
+    error = result.error
+    if (error) {
+      console.log('[sign-in] error', error)
+    } else {
+      console.log('[sign-in] success')
+    }
+  } catch (err: unknown) {
+    console.error('[sign-in] error', err)
+    return {
+      success: false,
+      formError:
+        err instanceof Error ? err.message : 'Unexpected error during sign-in. Please try again.',
+      values: { email },
+    }
+  }
 
   if (error) {
     const message = error.message || 'Unable to sign in.'
@@ -71,7 +95,7 @@ export async function signInWithPassword(formData: FormData): Promise<SignInResu
     }
   }
 
-  redirect('/dashboard')
+  return { success: true }
 }
 
 export async function resendConfirmationEmail(formData: FormData): Promise<SignInResult> {

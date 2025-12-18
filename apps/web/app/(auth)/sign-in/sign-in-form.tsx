@@ -1,7 +1,9 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useFormState, useFormStatus } from 'react-dom'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { signInWithPassword, resendConfirmationEmail } from './actions'
 
 type SignInFormState = Awaited<ReturnType<typeof signInWithPassword>>
@@ -22,6 +24,14 @@ export function SignInForm({
 }: SignInFormProps) {
   const [state, formAction] = useFormState(action, initialState)
   const [resendState, resendFormAction] = useFormState(resendAction, initialResendState)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (state?.success) {
+      router.push('/dashboard')
+      router.refresh()
+    }
+  }, [router, state?.success])
 
   return (
     <form className="mt-8 space-y-6" action={formAction}>
