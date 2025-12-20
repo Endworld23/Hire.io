@@ -38,6 +38,8 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
     return pathname === href || pathname.startsWith(`${href}/`)
   }
 
+  const collapsed = !isSidebarOpen
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <aside
@@ -49,7 +51,7 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
       >
         <div className="flex h-16 items-center px-4 border-b">
           <span className="text-lg font-semibold text-slate-900">
-            {isSidebarOpen ? 'Hire.io' : 'H'}
+            {isSidebarOpen ? 'Hiresimple.io' : 'H'}
           </span>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">
@@ -62,7 +64,8 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
                 href={item.href}
                 aria-disabled={item.disabled}
                 className={cn(
-                  'group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  'group relative flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  collapsed ? 'lg:justify-center' : 'gap-3',
                   item.disabled
                     ? 'cursor-not-allowed text-slate-400'
                     : active
@@ -76,7 +79,10 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
                   setIsSidebarOpen(false)
                 }}
               >
-                <Icon className="h-5 w-5" aria-hidden="true" />
+                <Icon
+                  className={cn(collapsed ? 'h-6 w-6' : 'h-5 w-5', 'transition-all')}
+                  aria-hidden="true"
+                />
                 <span className={cn('truncate', !isSidebarOpen && 'hidden lg:inline')}>
                   {item.label}
                 </span>

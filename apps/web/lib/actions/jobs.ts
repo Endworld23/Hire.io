@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createSupabaseClient } from '@hire-io/utils'
 import type {
   CreateJobInput,
@@ -225,7 +224,8 @@ export async function listJobs() {
   const user = await getCurrentUserProfile()
 
   if (!user) {
-    redirect('/sign-in')
+    console.warn('[listJobs] no user profile resolved')
+    return { jobs: [], error: 'Unable to load jobs. Please sign in again.' }
   }
 
   const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
@@ -241,11 +241,15 @@ export async function listJobs() {
     .order('created_at', { ascending: false })
 
   if (error) {
-    console.error('Failed to fetch jobs:', error)
-    return []
+    console.error('[listJobs] fetch error', {
+      userId: user.id,
+      tenantId: user.tenant_id,
+      message: error.message,
+    })
+    return { jobs: [], error: 'Unable to load jobs right now.' }
   }
 
-  return jobs || []
+  return { jobs: jobs || [], error: null }
 }
 
 export async function getJob(jobId: string) {

@@ -8,7 +8,7 @@ type JobsPageProps = {
 }
 
 export default async function JobsPage({ searchParams }: JobsPageProps) {
-  const jobs = await listJobs()
+  const { jobs, error } = await listJobs()
   const jobCreated = searchParams?.created === '1'
 
   return (
@@ -31,9 +31,15 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
         </Link>
       </div>
 
-      {jobCreated && (
+      {jobCreated && !error && (
         <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
           Job created successfully. Recruiters can now add candidates to the pipeline.
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          {error}
         </div>
       )}
 
