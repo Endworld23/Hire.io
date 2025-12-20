@@ -6,7 +6,7 @@ import { createSupabaseClient } from '@hire-io/utils'
 import { requireClientUser } from '@/lib/server-user'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
 
 export type ClientShortlistCandidate = {
   applicationId: string
@@ -37,7 +37,7 @@ export async function getClientShortlist(jobId: string): Promise<ClientShortlist
     notFound()
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
+  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
 
   const { data: job } = await supabase
     .from('jobs')

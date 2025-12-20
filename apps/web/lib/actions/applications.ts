@@ -7,7 +7,7 @@ import { applicationStageSchema } from '@hire-io/schemas'
 import { getCurrentUserProfile } from '@/lib/server-user'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
 
 type StageUpdateResult =
   | { success: true }
@@ -24,7 +24,7 @@ export async function updateApplicationStage(applicationId: string, stage: strin
     return { success: false, error: 'Unauthorized' }
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
+  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
 
   const { data: application } = await supabase
     .from('applications')
@@ -90,7 +90,7 @@ export async function addApplicationFeedback(formData: FormData) {
     throw new Error('Unauthorized')
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
+  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
 
   const { data: application } = await supabase
     .from('applications')

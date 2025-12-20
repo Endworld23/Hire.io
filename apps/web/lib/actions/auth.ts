@@ -7,10 +7,10 @@ import { createSupabaseClient } from '@hire-io/utils'
 import type { SignUpInput, SignInInput } from '@hire-io/schemas'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 
 function getSupabase() {
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseClient(supabaseUrl, supabasePublishableKey, {
     auth: {
       persistSession: false,
     }
@@ -43,7 +43,7 @@ export async function signUp(data: SignUpInput) {
 
   const supabaseAdmin = createSupabaseClient(
     supabaseUrl,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SECRET_KEY!,
     {
       auth: {
         persistSession: false,
@@ -135,7 +135,7 @@ export async function signIn(data: SignInInput) {
 
   const supabaseAdmin = createSupabaseClient(
     supabaseUrl,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SECRET_KEY!
   ) as any
 
   const { data: user } = await supabaseAdmin

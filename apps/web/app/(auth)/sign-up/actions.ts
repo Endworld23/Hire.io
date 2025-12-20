@@ -24,8 +24,8 @@ type SignUpValues = {
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY
 
 function validateSignUpForm(formData: FormData): {
   values: SignUpValues
@@ -96,12 +96,12 @@ export async function signUpWithTenant(
   let serviceClient: SupabaseClient
 
   try {
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+    if (!supabaseUrl || !supabasePublishableKey || !supabaseSecretKey) {
       throw new Error('Missing Supabase environment variables')
     }
 
     anonClient = await createServerSupabase()
-    serviceClient = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey, {
+    serviceClient = createSupabaseClient(supabaseUrl, supabaseSecretKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

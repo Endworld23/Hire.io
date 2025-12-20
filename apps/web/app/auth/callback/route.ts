@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import type { Database } from '@hire-io/utils'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   let response = NextResponse.redirect(new URL('/dashboard', request.url))
 
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase = createServerClient<Database>(supabaseUrl, supabasePublishableKey, {
     cookies: {
       get(name) {
         return request.cookies.get(name)?.value

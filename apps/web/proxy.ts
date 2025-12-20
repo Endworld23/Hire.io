@@ -4,7 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import type { Database } from '@hire-io/utils'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
 
 type UserProfile = {
   role: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
@@ -15,7 +15,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   let response = NextResponse.next()
 
-  const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const supabase = createServerClient<Database>(supabaseUrl, supabasePublishableKey, {
     cookies: {
       get(name) {
         return request.cookies.get(name)?.value

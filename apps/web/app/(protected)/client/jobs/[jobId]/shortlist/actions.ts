@@ -6,7 +6,7 @@ import { requireClientUser } from '@/lib/server-user'
 import { applicationStageSchema } from '@hire-io/schemas'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
 
 type Decision = 'shortlist' | 'reject'
 
@@ -29,7 +29,7 @@ export async function updateShortlistDecision({
     return { error: 'Unauthorized' }
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey) as any
+  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
 
   const { data: application } = await supabase
     .from('applications')
