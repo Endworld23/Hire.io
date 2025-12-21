@@ -150,12 +150,6 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
                         </div>
                       </div>
                       <div className="ml-5 flex flex-shrink-0 items-center space-x-4">
-                        <div className="text-center">
-                          <p className="text-2xl font-semibold text-slate-900">
-                            {Array.isArray(job.applications) ? job.applications[0]?.count || 0 : 0}
-                          </p>
-                          <p className="text-xs text-slate-500">Applications</p>
-                        </div>
                         <Link
                           href={`/dashboard/jobs/${job.id}/edit`}
                           className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"

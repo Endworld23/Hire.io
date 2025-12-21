@@ -262,10 +262,7 @@ export async function listJobs(): Promise<{ jobs: JobRecord[]; error: string | n
 
   const { data: jobs, error } = await supabase
     .from('jobs')
-    .select(`
-      *,
-      applications:applications(count)
-    `)
+    .select('*')
     .eq('tenant_id', profile.tenant_id)
     .neq('status', 'archived')
     .order('created_at', { ascending: false })
@@ -276,7 +273,7 @@ export async function listJobs(): Promise<{ jobs: JobRecord[]; error: string | n
       tenantId: profile.tenant_id,
       message: error.message,
     })
-    return { jobs: [], error: 'Unable to load jobs right now.' }
+    return { jobs: [], error: `Unable to load jobs: ${error.message}` }
   }
 
   return { jobs: jobs || [], error: null }
