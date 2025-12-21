@@ -1,87 +1,174 @@
-import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { getJobForEdit } from '@/lib/actions/jobs'
-import { JobEditForm } from './job-edit-form'
-import { archiveJobAction } from '../job-actions'
-import { contractTypeSchema, type ContractType } from '@hire-io/schemas'
+'use client'
 
-type PageProps = {
-  params: {
-    jobId: string
-  }
+import { useEffect, useState, useTransition } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Input, Textarea, Button } from '@/components/ui'
+import type { CreateJobInput, EmploymentType, ContractType } from '@hire-io/schemas'
+import { loadJob, submitJobUpdate } from './actions'
+
+type EditableJob = CreateJobInput & {
+  id: string
+  salaryMin?: number | null
+  salaryMax?: number | null
+  hourlyRateMin?: number | null
+  hourlyRateMax?: number | null
+  contractType?: ContractType | null
 }
 
-export default async function JobEditPage({ params }: PageProps) {
-  const job = await getJobForEdit(params.jobId)
+export default function EditJobPage() {
+  const router = useRouter()
+  const { jobId } = useParams<{ jobId: string }>()
+  const [job, setJob] = useState<EditableJob | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, startSubmitTransition] = useTransition()
+
+  useEffect(() => {
+    if (!jobId) return
+    ;(async () => {
+      const data = await loadJob(jobId)
+      if (!data) {
+        setError('Job not found or you are not authorized to edit this job.')
+      } else {
+        setJob({
+          ...data,
+          salaryMin: data.salaryMin ?? null,
+          salaryMax: data.salaryMax ?? null,
+          hourlyRateMin: data.hourlyRateMin ?? null,
+          hourlyRateMax: data.hourlyRateMax ?? null,
+          contractType: (data.contractType as ContractType | null) ?? null,
+        } as EditableJob)
+      }
+      setIsLoading(false)
+    })()
+  }, [jobId])
+
+  const setField = (field: keyof EditableJob, value: any) => {
+    setJob(prev => (prev ? { ...prev, [field]: value } : prev))
+    setError(null)
+  }
+
+  const handleSubmit = () => {
+    if (!job) return
+    const payload: Partial<CreateJobInput> = {
+      title: job.title,
+      description: job.description,
+      location: job.location,
+      employmentType: job.employmentType as EmploymentType,
+      requiredSkills: job.requiredSkills,
+      preferredSkills: job.preferredSkills,
+      salaryMin: toNumber(job.salaryMin),
+      salaryMax: toNumber(job.salaryMax),
+      hourlyRateMin: toNumber(job.hourlyRateMin),
+      hourlyRateMax: toNumber(job.hourlyRateMax),
+      contractType: job.contractType || undefined,
+      status: job.status,
+    }
+
+    startSubmitTransition(async () => {
+      const result = await submitJobUpdate(job.id, payload)
+      if (!result?.success) {
+        setError(result?.error || 'Unable to update job')
+      }
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-6 w-40 animate-pulse rounded bg-slate-200" />
+        <div className="h-32 animate-pulse rounded bg-slate-200" />
+      </div>
+    )
+  }
 
   if (!job) {
-    notFound()
+    return (
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <h1 className="text-xl font-semibold text-slate-900">Job not available</h1>
+        <p className="mt-2 text-sm text-slate-600">{error || 'This job could not be loaded.'}</p>
+        <Link href="/dashboard/jobs" className="mt-4 inline-flex text-sm font-semibold text-blue-600">
+          Back to Jobs
+        </Link>
+      </div>
+    )
   }
-
-  const contractType: ContractType | '' = contractTypeSchema.options.includes(job.contractType as ContractType)
-    ? (job.contractType as ContractType)
-    : ''
-
-  const initialValues = {
-    title: job.title,
-    description: job.description,
-    location: job.location,
-    employmentType: job.employmentType,
-    experienceLevel: job.experienceLevel,
-    requiredSkills: job.requiredSkills,
-    preferredSkills: job.preferredSkills,
-    screeningQuestions: job.screeningQuestions,
-    salaryMin: job.salaryMin?.toString() || '',
-    salaryMax: job.salaryMax?.toString() || '',
-    hourlyRateMin: job.hourlyRateMin?.toString() || '',
-    hourlyRateMax: job.hourlyRateMax?.toString() || '',
-    contractType,
-    intakeSummary: job.intakeSummary || '',
-    idealCandidateProfile: job.idealCandidateProfile || '',
-    aiSuggestedQuestionsText: job.aiSuggestedQuestions.join('\n'),
-    status: job.status,
-  }
-
-  const archiveAction = archiveJobAction.bind(null, job.id)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0 space-y-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase text-blue-600">Job Settings</p>
-              <h1 className="text-3xl font-semibold text-gray-900">Edit Job</h1>
-              <p className="text-sm text-gray-500">
-                Updating fields applies immediately for internal recruiters and client shortlists.
-              </p>
-            </div>
-            {!job.status || job.status !== 'archived' ? (
-              <form action={archiveAction}>
-                <button
-                  type="submit"
-                  className="inline-flex items-center rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50"
-                >
-                  Archive Job
-                </button>
-              </form>
-            ) : (
-              <span className="inline-flex items-center rounded-full bg-gray-200 px-3 py-1 text-xs font-semibold text-gray-700">
-                Archived
-              </span>
-            )}
-          </div>
-
-          <Link
-            href={`/dashboard/jobs/${job.id}`}
-            className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700"
-          >
-            ← Back to Job Detail
-          </Link>
-
-          <JobEditForm jobId={job.id} initialValues={initialValues} />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold text-slate-500">Edit Job</p>
+          <h1 className="text-2xl font-bold text-slate-900">{job.title}</h1>
+          <p className="text-sm text-slate-600">Job ID: {job.id}</p>
         </div>
+        <Link href="/dashboard/jobs" className="text-sm font-semibold text-blue-600">
+          Back to Jobs
+        </Link>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          {error}
+        </div>
+      )}
+
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div>
+          <label className="text-sm font-medium text-slate-800">Title</label>
+          <Input value={job.title} onChange={e => setField('title', e.target.value)} />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-slate-800">Location</label>
+          <Input value={job.location} onChange={e => setField('location', e.target.value)} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="text-sm font-medium text-slate-800">Salary Min</label>
+            <Input
+              type="number"
+              value={job.salaryMin ?? ''}
+              onChange={e => setField('salaryMin', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-slate-800">Salary Max</label>
+            <Input
+              type="number"
+              value={job.salaryMax ?? ''}
+              onChange={e => setField('salaryMax', e.target.value)}
+            />
+          </div>
+        </div>
+        <div>
+          <label className="text-sm font-medium text-slate-800">Status</label>
+          <Input value={job.status} onChange={e => setField('status', e.target.value)} />
+        </div>
+        <div>
+          <label className="text-sm font-medium text-slate-800">Description</label>
+          <Textarea
+            rows={4}
+            value={job.description || ''}
+            onChange={e => setField('description', e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-end gap-3">
+        <Button variant="outline" onClick={() => router.push('/dashboard/jobs')}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={isSubmitting}>
+          {isSubmitting ? 'Saving…' : 'Save changes'}
+        </Button>
       </div>
     </div>
   )
+}
+
+function toNumber(value: any): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined
+  const n = Number(value)
+  return Number.isFinite(n) ? n : undefined
 }
