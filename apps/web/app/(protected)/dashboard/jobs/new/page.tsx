@@ -183,7 +183,7 @@ export default function NewJobPage() {
         setErrors(prev => ({
           ...prev,
           ...nextErrors,
-          submit: result.error || 'Unable to create job right now.',
+          submit: result.formError || result.error || 'Unable to create job right now.',
         }))
         const firstField = Object.keys(nextErrors)[0]
         if (firstField) {

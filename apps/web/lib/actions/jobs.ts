@@ -247,8 +247,9 @@ export async function createJob(jobData: CreateJobInput) {
 
     return { success: true, jobId: job.id }
   } catch (error) {
-    console.error('Job creation error:', error)
-    return { error: 'Failed to create job', details: error instanceof Error ? error.message : 'Unknown error' }
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    console.error('[jobs] createJob error', { message })
+    return { error: 'Failed to create job', formError: message }
   }
 }
 

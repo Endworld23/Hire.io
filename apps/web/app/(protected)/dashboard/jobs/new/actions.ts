@@ -7,7 +7,7 @@ type FieldErrorMap = Record<string, string[] | undefined>
 
 export type SubmitJobResult =
   | { success: true; jobId: string }
-  | { success: false; error?: string; fieldErrors?: FieldErrorMap }
+  | { success: false; error?: string; formError?: string; fieldErrors?: FieldErrorMap }
 
 export async function submitJob(input: CreateJobInput): Promise<SubmitJobResult> {
   // Phase 1 – Core ATS (Job Builder) – /docs/roadmap.md §Phase 1
@@ -23,7 +23,7 @@ export async function submitJob(input: CreateJobInput): Promise<SubmitJobResult>
   const result = await createJob(parsed.data)
 
   if (result?.error) {
-    return { success: false, error: result.error }
+    return { success: false, error: result.error, formError: result.formError }
   }
 
   return { success: true, jobId: result.jobId }
