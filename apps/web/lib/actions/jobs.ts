@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createSupabaseClient } from '@hire-io/utils'
 import type {
   CreateJobInput,
   AIIntakeInput,
@@ -11,11 +10,45 @@ import type {
   ContractType,
 } from '@hire-io/schemas'
 import { createJobSchema, aiIntakeSchema, aiIntakeResultSchema } from '@hire-io/schemas'
-import { getCurrentUserProfile } from '@/lib/server-user'
+import { createServerSupabase } from '@/lib/supabase-server'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
 const openaiApiKey = process.env.OPENAI_API_KEY
+
+type UserProfile = {
+  id: string
+  tenant_id: string
+  role: string
+}
+type JobRecord = any
+
+async function getAuthedContext(label: string): Promise<
+  | { supabase: any; profile: UserProfile }
+  | { error: string }
+> {
+  const supabase = await createServerSupabase()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    console.warn(`[jobs] ${label} no-user`, { message: userError?.message })
+    return { error: 'Unauthorized' }
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('users')
+    .select('id, tenant_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (profileError || !profile) {
+    console.error(`[jobs] ${label} no-profile`, { userId: user.id, message: profileError?.message })
+    return { error: 'Unauthorized' }
+  }
+
+  return { supabase, profile: profile as UserProfile }
+}
 
 function stripPII(text: string): string {
   let cleaned = text
@@ -29,9 +62,10 @@ export async function runJobIntakeAI(intakeData: AIIntakeInput): Promise<
   | { success: true; result: AIIntakeResult }
   | { error: string; details?: unknown }
 > {
-  const user = await getCurrentUserProfile()
-
-  if (!user || (user.role !== 'admin' && user.role !== 'recruiter')) {
+  const context = await getAuthedContext('ai-intake')
+  if ('error' in context) return { error: context.error }
+  const { supabase, profile } = context
+  if (profile.role !== 'admin' && profile.role !== 'recruiter') {
     return { error: 'Unauthorized' }
   }
 
@@ -140,10 +174,9 @@ Return strict JSON matching the schema.`
       return { error: 'AI output invalid', details: structured.error.flatten() }
     }
 
-    const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
     await supabase.from('events').insert({
-      tenant_id: user.tenant_id,
-      actor_user_id: user.id,
+      tenant_id: profile.tenant_id,
+      actor_user_id: profile.id,
       entity_type: 'job_intake_draft',
       entity_id: null,
       action: 'ai_job_intake_qna',
@@ -162,9 +195,10 @@ Return strict JSON matching the schema.`
 }
 
 export async function createJob(jobData: CreateJobInput) {
-  const user = await getCurrentUserProfile()
-
-  if (!user || (user.role !== 'admin' && user.role !== 'recruiter')) {
+  const context = await getAuthedContext('createJob')
+  if ('error' in context) return { error: context.error }
+  const { supabase, profile } = context
+  if (profile.role !== 'admin' && profile.role !== 'recruiter') {
     return { error: 'Unauthorized' }
   }
 
@@ -174,12 +208,10 @@ export async function createJob(jobData: CreateJobInput) {
   }
 
   try {
-    const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
-
     const { data: job, error: jobError } = await supabase
       .from('jobs')
       .insert({
-        tenant_id: user.tenant_id,
+        tenant_id: profile.tenant_id,
         title: jobData.title,
         location: jobData.location,
         salary_min: jobData.salaryMin,
@@ -188,7 +220,7 @@ export async function createJob(jobData: CreateJobInput) {
         nice_to_have: jobData.preferredSkills,
         spec: buildJobSpec(jobData),
         status: jobData.status,
-        created_by: user.id,
+        created_by: profile.id,
       })
       .select()
       .single()
@@ -200,8 +232,8 @@ export async function createJob(jobData: CreateJobInput) {
     await supabase
       .from('events')
       .insert({
-        tenant_id: user.tenant_id,
-        actor_user_id: user.id,
+        tenant_id: profile.tenant_id,
+        actor_user_id: profile.id,
         entity_type: 'job',
         entity_id: job.id,
         action: 'created',
@@ -220,15 +252,12 @@ export async function createJob(jobData: CreateJobInput) {
   }
 }
 
-export async function listJobs() {
-  const user = await getCurrentUserProfile()
-
-  if (!user) {
-    console.warn('[listJobs] no user profile resolved')
-    return { jobs: [], error: 'Unable to load jobs. Please sign in again.' }
+export async function listJobs(): Promise<{ jobs: JobRecord[]; error: string | null }> {
+  const context = await getAuthedContext('listJobs')
+  if ('error' in context) {
+    return { jobs: [], error: context.error }
   }
-
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
+  const { supabase, profile } = context
 
   const { data: jobs, error } = await supabase
     .from('jobs')
@@ -236,14 +265,14 @@ export async function listJobs() {
       *,
       applications:applications(count)
     `)
-    .eq('tenant_id', user.tenant_id)
+    .eq('tenant_id', profile.tenant_id)
     .neq('status', 'archived')
     .order('created_at', { ascending: false })
 
   if (error) {
     console.error('[listJobs] fetch error', {
-      userId: user.id,
-      tenantId: user.tenant_id,
+      userId: profile.id,
+      tenantId: profile.tenant_id,
       message: error.message,
     })
     return { jobs: [], error: 'Unable to load jobs right now.' }
@@ -252,14 +281,10 @@ export async function listJobs() {
   return { jobs: jobs || [], error: null }
 }
 
-export async function getJob(jobId: string) {
-  const user = await getCurrentUserProfile()
-
-  if (!user) {
-    return null
-  }
-
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
+export async function getJob(jobId: string): Promise<JobRecord | null> {
+  const context = await getAuthedContext('getJob')
+  if ('error' in context) return null
+  const { supabase, profile } = context
 
   const { data: job, error } = await supabase
     .from('jobs')
@@ -291,7 +316,7 @@ export async function getJob(jobId: string) {
       `,
     )
     .eq('id', jobId)
-    .eq('tenant_id', user.tenant_id)
+    .eq('tenant_id', profile.tenant_id)
     .single()
 
   if (error) {
@@ -324,17 +349,14 @@ export type JobEditData = {
 }
 
 export async function getJobForEdit(jobId: string): Promise<JobEditData | null> {
-  const user = await getCurrentUserProfile()
-  if (!user) {
-    return null
-  }
-
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
+  const context = await getAuthedContext('getJobForEdit')
+  if ('error' in context) return null
+  const { supabase, profile } = context
   const { data: job, error } = await supabase
     .from('jobs')
     .select('id, tenant_id, title, location, salary_min, salary_max, status, required_skills, nice_to_have, spec')
     .eq('id', jobId)
-    .eq('tenant_id', user.tenant_id)
+    .eq('tenant_id', profile.tenant_id)
     .single()
 
   if (error || !job) {
@@ -370,9 +392,10 @@ export async function getJobForEdit(jobId: string): Promise<JobEditData | null> 
 }
 
 export async function updateJob(jobId: string, jobData: CreateJobInput) {
-  const user = await getCurrentUserProfile()
-
-  if (!user || (user.role !== 'admin' && user.role !== 'recruiter')) {
+  const context = await getAuthedContext('updateJob')
+  if ('error' in context) return { success: false, error: context.error }
+  const { supabase, profile } = context
+  if (profile.role !== 'admin' && profile.role !== 'recruiter') {
     return { success: false, error: 'Unauthorized' }
   }
 
@@ -384,15 +407,13 @@ export async function updateJob(jobId: string, jobData: CreateJobInput) {
     }
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
-
   const { data: existing } = await supabase
     .from('jobs')
     .select('id, tenant_id')
     .eq('id', jobId)
     .single()
 
-  if (!existing || existing.tenant_id !== user.tenant_id) {
+  if (!existing || existing.tenant_id !== profile.tenant_id) {
     return { success: false, error: 'Job not found' }
   }
 
@@ -411,7 +432,7 @@ export async function updateJob(jobId: string, jobData: CreateJobInput) {
       status: payload.status,
     })
     .eq('id', jobId)
-    .eq('tenant_id', user.tenant_id)
+    .eq('tenant_id', profile.tenant_id)
 
   if (updateError) {
     console.error('Job update error:', updateError)
@@ -419,8 +440,8 @@ export async function updateJob(jobId: string, jobData: CreateJobInput) {
   }
 
   await supabase.from('events').insert({
-    tenant_id: user.tenant_id,
-    actor_user_id: user.id,
+    tenant_id: profile.tenant_id,
+    actor_user_id: profile.id,
     entity_type: 'job',
     entity_id: jobId,
     action: 'job_updated',
@@ -437,19 +458,18 @@ export async function updateJob(jobId: string, jobData: CreateJobInput) {
 }
 
 export async function archiveJob(jobId: string) {
-  const user = await getCurrentUserProfile()
-
-  if (!user || (user.role !== 'admin' && user.role !== 'recruiter')) {
+  const context = await getAuthedContext('archiveJob')
+  if ('error' in context) return { success: false, error: context.error }
+  const { supabase, profile } = context
+  if (profile.role !== 'admin' && profile.role !== 'recruiter') {
     return { success: false, error: 'Unauthorized' }
   }
-
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
 
   const { data: job, error } = await supabase
     .from('jobs')
     .update({ status: 'archived' })
     .eq('id', jobId)
-    .eq('tenant_id', user.tenant_id)
+    .eq('tenant_id', profile.tenant_id)
     .select('id')
     .single()
 
@@ -459,8 +479,8 @@ export async function archiveJob(jobId: string) {
   }
 
   await supabase.from('events').insert({
-    tenant_id: user.tenant_id,
-    actor_user_id: user.id,
+    tenant_id: profile.tenant_id,
+    actor_user_id: profile.id,
     entity_type: 'job',
     entity_id: jobId,
     action: 'job_archived',
@@ -512,18 +532,15 @@ export type JobMetrics = {
 }
 
 export async function getJobMetrics(jobId: string): Promise<JobMetrics | null> {
-  const user = await getCurrentUserProfile()
-  if (!user) {
-    return null
-  }
-
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
+  const context = await getAuthedContext('getJobMetrics')
+  if ('error' in context) return null
+  const { supabase, profile } = context
 
   const { data: applications, error } = await supabase
     .from('applications')
     .select('stage, match_score')
     .eq('job_id', jobId)
-    .eq('tenant_id', user.tenant_id)
+    .eq('tenant_id', profile.tenant_id)
 
   if (error) {
     console.error('Job metrics error', error)

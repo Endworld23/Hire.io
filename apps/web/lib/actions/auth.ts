@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createSupabaseClient } from '@hire-io/utils'
+import { createServerSupabase } from '@/lib/supabase-server'
 import type { SignUpInput, SignInInput } from '@hire-io/schemas'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -174,12 +175,8 @@ export async function signIn(data: SignInInput) {
 }
 
 export async function signOut() {
-  const supabase = getSupabase()
+  const supabase = await createServerSupabase()
   await supabase.auth.signOut()
-
-  const cookieStore = await cookies()
-  cookieStore.delete('sb-access-token')
-  cookieStore.delete('sb-refresh-token')
 
   revalidatePath('/', 'layout')
   redirect('/sign-in')
