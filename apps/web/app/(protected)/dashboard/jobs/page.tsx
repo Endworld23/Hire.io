@@ -156,14 +156,20 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
                         >
                           Edit
                         </Link>
-                        <svg
-                          className="h-5 w-5 text-slate-400"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                        <Link
+                          href={`/dashboard/jobs/${job.id}/edit`}
+                          className="flex h-5 w-5 items-center justify-center text-slate-400 hover:text-slate-600"
+                          aria-label="Edit job"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </Link>
                       </div>
                     </div>
                   </div>

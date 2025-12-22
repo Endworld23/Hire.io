@@ -32,6 +32,18 @@ export async function proxy(request: NextRequest) {
     },
   })
 
+  const clearSbCookies = () => {
+    const allCookies = new Set([
+      ...request.cookies.getAll().map((c) => c.name),
+      ...response.cookies.getAll().map((c) => c.name),
+    ])
+    allCookies.forEach((name) => {
+      if (name.startsWith('sb-')) {
+        response.cookies.set(name, '', { path: '/', expires: new Date(0) })
+      }
+    })
+  }
+
   const redirectWithCookies = (url: URL | string) => {
     const redirectUrl = typeof url === 'string' ? new URL(url, request.url) : url
     const redirectResponse = NextResponse.redirect(redirectUrl)
@@ -59,7 +71,9 @@ export async function proxy(request: NextRequest) {
       } = await supabase.auth.getUser()
 
       if (userError || !user) {
-        return redirectWithCookies('/sign-in')
+        console.warn('[auth] middleware no-user or error', { message: userError?.message })
+        clearSbCookies()
+        return redirectWithCookies('/sign-in?reason=session_expired')
       }
 
       const { data: userProfile } = await supabase
@@ -69,7 +83,9 @@ export async function proxy(request: NextRequest) {
         .single<UserProfile>()
 
       if (!userProfile) {
-        return redirectWithCookies('/sign-in')
+        console.warn('[auth] middleware no-profile', { userId: user.id })
+        clearSbCookies()
+        return redirectWithCookies('/sign-in?reason=session_expired')
       }
 
       if (pathname.startsWith('/dashboard')) {
@@ -112,8 +128,9 @@ export async function proxy(request: NextRequest) {
 
       return response
     } catch (error) {
-      console.error('Proxy error:', error)
-      return redirectWithCookies('/sign-in')
+      console.error('[auth] middleware error', error)
+      clearSbCookies()
+      return redirectWithCookies('/sign-in?reason=session_expired')
     }
   }
 
@@ -121,7 +138,13 @@ export async function proxy(request: NextRequest) {
     try {
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser()
+
+      if (userError) {
+        console.warn('[auth] sign-in path userError', { message: userError.message })
+        clearSbCookies()
+      }
 
       if (user) {
         const { data: userProfile } = await supabase
