@@ -8,7 +8,8 @@ type DashboardData = {
   jobs: any[]
   candidates: any[]
   applications: any[]
-  error?: string
+  authError?: string
+  dataErrors: string[]
 }
 
 type DashboardUserProfile = {
@@ -28,11 +29,11 @@ async function getDashboardData(): Promise<DashboardData> {
 
   if (userError) {
     console.warn('[dashboard] getUser error', { message: userError.message })
-    return { jobs: [], candidates: [], applications: [], error: 'Session error. Please sign in again.' }
+    return { jobs: [], candidates: [], applications: [], dataErrors: [], authError: 'Session error. Please sign in again.' }
   }
 
   if (!user) {
-    return { jobs: [], candidates: [], applications: [], error: 'Session missing. Please sign in again.' }
+    return { jobs: [], candidates: [], applications: [], dataErrors: [], authError: 'Session missing. Please sign in again.' }
   }
 
   const { data: userProfile, error: profileError } = await supabase
@@ -43,15 +44,15 @@ async function getDashboardData(): Promise<DashboardData> {
 
   if (profileError || !userProfile) {
     console.warn('[dashboard] profile error', { message: profileError?.message, userId: user.id })
-    return { jobs: [], candidates: [], applications: [], error: 'Profile unavailable. Please sign in again.' }
+    return { jobs: [], candidates: [], applications: [], dataErrors: [], authError: 'Profile unavailable. Please sign in again.' }
   }
 
   if (!userProfile.tenant_id) {
     console.warn('[dashboard] missing tenant', { userId: user.id })
-    return { jobs: [], candidates: [], applications: [], error: 'Profile missing tenant. Please sign in again.' }
+    return { jobs: [], candidates: [], applications: [], dataErrors: [], authError: 'Profile missing tenant. Please sign in again.' }
   }
 
-  const errors: string[] = []
+  const dataErrors: string[] = []
 
   const [{ data: jobs, error: jobsError }, { data: candidates, error: candidatesError }, { data: applications, error: applicationsError }] =
     await Promise.all([
@@ -75,9 +76,18 @@ async function getDashboardData(): Promise<DashboardData> {
         .limit(5),
     ])
 
-  if (jobsError) errors.push(`Jobs: ${jobsError.message}`)
-  if (candidatesError) errors.push(`Candidates: ${candidatesError.message}`)
-  if (applicationsError) errors.push(`Applications: ${applicationsError.message}`)
+  if (jobsError) {
+    console.warn('[dashboard] jobs error', { message: jobsError.message })
+    dataErrors.push(`Jobs: ${jobsError.message}`)
+  }
+  if (candidatesError) {
+    console.warn('[dashboard] candidates error', { message: candidatesError.message })
+    dataErrors.push(`Candidates: ${candidatesError.message}`)
+  }
+  if (applicationsError) {
+    console.warn('[dashboard] applications error', { message: applicationsError.message })
+    dataErrors.push(`Applications: ${applicationsError.message}`)
+  }
 
   return {
     user: userProfile,
@@ -85,18 +95,18 @@ async function getDashboardData(): Promise<DashboardData> {
     jobs: jobs || [],
     candidates: candidates || [],
     applications: applications || [],
-    error: errors[0],
+    dataErrors,
   }
 }
 
 export default async function DashboardPage() {
   const data = await getDashboardData()
 
-  if (data.error || !data.user) {
+  if (data.authError || !data.user) {
     return (
       <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
         <p className="font-semibold">Session problem — please sign in again.</p>
-        {data.error ? <p className="text-sm">{data.error}</p> : null}
+        {data.authError ? <p className="text-sm">{data.authError}</p> : null}
         <Link className="text-sm font-medium text-blue-700 underline" href="/sign-in">
           Go to sign-in
         </Link>
@@ -106,6 +116,16 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {data.dataErrors.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+          <p className="font-semibold">Some data could not be loaded:</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+            {data.dataErrors.map((err) => (
+              <li key={err}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500">
