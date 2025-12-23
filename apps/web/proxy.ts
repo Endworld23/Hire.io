@@ -134,6 +134,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Allow auth routes to render without auto-redirect loops
   if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
     try {
       const {
@@ -144,28 +145,15 @@ export async function proxy(request: NextRequest) {
       if (userError) {
         console.warn('[auth] sign-in path userError', { message: userError.message })
         clearSbCookies()
-      }
-
-      if (user) {
-        const { data: userProfile } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', user.id)
-          .single<UserProfile>()
-
-        if (userProfile) {
-          if (userProfile.role === 'admin' || userProfile.role === 'recruiter') {
-            return redirectWithCookies('/dashboard')
-          } else if (userProfile.role === 'client') {
-            return redirectWithCookies('/client')
-          } else if (userProfile.role === 'candidate') {
-            return redirectWithCookies('/candidate')
-          }
-        }
+      } else if (user) {
+        // Do not auto-redirect; page can render a signed-in hint.
+        console.info('[auth] sign-in path authed', { userId: user.id })
       }
     } catch (error) {
-      console.error('Auth check error:', error)
+      console.error('[auth] sign-in path error', error)
+      clearSbCookies()
     }
+    return response
   }
 
   return response

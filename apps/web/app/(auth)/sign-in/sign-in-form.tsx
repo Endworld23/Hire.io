@@ -25,13 +25,14 @@ export function SignInForm({
   const [state, formAction] = useFormState(action, initialState)
   const [resendState, resendFormAction] = useFormState(resendAction, initialResendState)
   const router = useRouter()
+  const signedIn = Boolean(state?.success)
 
   useEffect(() => {
-    if (state?.success) {
+    if (signedIn) {
       router.push('/dashboard')
       router.refresh()
     }
-  }, [router, state?.success])
+  }, [router, signedIn])
 
   return (
     <form className="mt-8 space-y-6" action={formAction}>
@@ -42,6 +43,12 @@ export function SignInForm({
               <h3 className="text-sm font-medium text-red-800">{state.formError}</h3>
             </div>
           </div>
+        </div>
+      )}
+
+      {signedIn && (
+        <div className="rounded-md bg-green-50 p-3 text-sm text-green-800">
+          Signed in — redirecting...
         </div>
       )}
 
@@ -119,10 +126,11 @@ export function SignInForm({
 
 function SubmitButton() {
   const { pending } = useFormStatus()
+  const disabled = pending
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={disabled}
       className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {pending ? 'Signing in...' : 'Sign in'}
