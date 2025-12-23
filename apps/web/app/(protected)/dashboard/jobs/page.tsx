@@ -84,12 +84,14 @@ export default async function JobsPage({ searchParams }: JobsPageProps) {
                   console.warn('[jobs] missing job.id in list item', job)
                 }
               }
-              const detailHref = jobId ? `/dashboard/jobs/${jobId}` : undefined
               const editHref = jobId ? `/dashboard/jobs/${jobId}/edit` : undefined
               return (
                 <li key={jobId || job?.title || Math.random()}>
-                  {detailHref ? (
-                    <Link href={detailHref} className="block transition hover:bg-slate-50">
+                  {editHref ? (
+                    <Link
+                      href={editHref}
+                      className="block cursor-pointer transition hover:bg-slate-50"
+                    >
                       <JobRow job={job} editHref={editHref} />
                     </Link>
                   ) : (
@@ -199,18 +201,14 @@ function JobRow({ job, editHref }: { job: any; editHref?: string }) {
         </div>
         <div className="ml-5 flex flex-shrink-0 items-center space-x-4">
           {editHref && (
-            <Link
-              href={editHref}
-              className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
-            >
+            <span className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700">
               Edit
-            </Link>
+            </span>
           )}
           {editHref && (
-            <Link
-              href={editHref}
-              className="flex h-5 w-5 items-center justify-center text-slate-400 hover:text-slate-600"
-              aria-label="Edit job"
+            <span
+              className="flex h-5 w-5 items-center justify-center text-slate-400"
+              aria-hidden="true"
             >
               <svg
                 className="h-5 w-5"
@@ -220,7 +218,7 @@ function JobRow({ job, editHref }: { job: any; editHref?: string }) {
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </Link>
+            </span>
           )}
         </div>
       </div>
