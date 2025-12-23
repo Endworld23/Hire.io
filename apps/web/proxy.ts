@@ -32,6 +32,13 @@ export async function proxy(request: NextRequest) {
     },
   })
 
+  const setAuthHeaders = (res: NextResponse, reason: string, hasSbCookie: boolean) => {
+    res.headers.set('x-auth-redirect-reason', reason)
+    res.headers.set('x-auth-path', pathname)
+    res.headers.set('x-auth-has-sb-cookie', String(hasSbCookie))
+    return res
+  }
+
   const clearSbCookies = () => {
     const allCookies = new Set([
       ...request.cookies.getAll().map((c) => c.name),
@@ -63,7 +70,26 @@ export async function proxy(request: NextRequest) {
     return redirectResponse
   }
 
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/client') || pathname.startsWith('/candidate')) {
+  const isProtected =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/client') ||
+    pathname.startsWith('/candidate')
+  const isAuthRoute =
+    pathname.startsWith('/sign-in') ||
+    pathname.startsWith('/sign-up') ||
+    pathname.startsWith('/onboarding') ||
+    pathname.startsWith('/auth/callback')
+  const isStaticAsset =
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname === '/favicon.ico' ||
+    pathname === '/robots.txt'
+
+  if (isStaticAsset) {
+    return response
+  }
+
+  if (isProtected) {
     try {
       const {
         data: { user },
@@ -74,12 +100,20 @@ export async function proxy(request: NextRequest) {
       if (userError) {
         console.warn('[auth] middleware getUser error', { path: pathname, hasSbCookie, message: userError.message })
         clearSbCookies()
-        return redirectWithCookies('/sign-in?reason=session_expired')
+        return setAuthHeaders(
+          redirectWithCookies('/sign-in?reason=session_expired'),
+          'getUser_error',
+          hasSbCookie
+        )
       }
 
       if (!user) {
         console.warn('[auth] middleware no-user', { path: pathname, hasSbCookie })
-        return redirectWithCookies('/sign-in?reason=unauthorized')
+        return setAuthHeaders(
+          redirectWithCookies('/sign-in?reason=unauthorized'),
+          'no_user',
+          hasSbCookie
+        )
       }
 
       const { data: userProfile, error: profileError } = await supabase
@@ -94,7 +128,11 @@ export async function proxy(request: NextRequest) {
           userId: user.id,
           message: profileError?.message,
         })
-        return redirectWithCookies('/onboarding?reason=missing_profile')
+        return setAuthHeaders(
+          redirectWithCookies('/onboarding?reason=missing_profile'),
+          profileError ? 'profile_error' : 'tenant_missing',
+          hasSbCookie
+        )
       }
 
       if (pathname.startsWith('/dashboard')) {
@@ -139,12 +177,16 @@ export async function proxy(request: NextRequest) {
     } catch (error) {
       console.error('[auth] middleware error', error)
       clearSbCookies()
-      return redirectWithCookies('/sign-in?reason=session_expired')
+      return setAuthHeaders(
+        redirectWithCookies('/sign-in?reason=session_expired'),
+        'getUser_error',
+        request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
+      )
     }
   }
 
-  // Allow auth routes to render without auto-redirect loops
-  if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
+  // Allow auth/onboarding routes to render without auto-redirect loops
+  if (isAuthRoute) {
     try {
       const {
         data: { user },
@@ -169,5 +211,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/client/:path*', '/candidate/:path*', '/sign-in', '/sign-up'],
+  matcher: ['/dashboard/:path*', '/client/:path*', '/candidate/:path*', '/sign-in', '/sign-up', '/onboarding', '/auth/callback'],
 }
