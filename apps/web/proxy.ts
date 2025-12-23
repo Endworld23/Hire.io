@@ -82,15 +82,19 @@ export async function proxy(request: NextRequest) {
         return redirectWithCookies('/sign-in?reason=unauthorized')
       }
 
-      const { data: userProfile } = await supabase
+      const { data: userProfile, error: profileError } = await supabase
         .from('users')
         .select('role, tenant_id')
         .eq('id', user.id)
         .single<UserProfile>()
 
-      if (!userProfile) {
-        console.warn('[auth] middleware no-profile', { path: pathname, userId: user.id })
-        return redirectWithCookies('/sign-in?reason=unauthorized')
+      if (profileError || !userProfile || !userProfile.tenant_id) {
+        console.warn('[auth] middleware missing-profile', {
+          path: pathname,
+          userId: user.id,
+          message: profileError?.message,
+        })
+        return redirectWithCookies('/onboarding?reason=missing_profile')
       }
 
       if (pathname.startsWith('/dashboard')) {
