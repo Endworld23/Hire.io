@@ -14,6 +14,7 @@ type UserProfile = {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   let response = NextResponse.next()
+  const hasSbCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
 
   const supabase = createServerClient<Database>(supabaseUrl, supabasePublishableKey, {
     cookies: {
@@ -32,10 +33,10 @@ export async function proxy(request: NextRequest) {
     },
   })
 
-  const setAuthHeaders = (res: NextResponse, reason: string, hasSbCookie: boolean) => {
+  const setAuthHeaders = (res: NextResponse, reason: string, hasCookie: boolean) => {
     res.headers.set('x-auth-redirect-reason', reason)
     res.headers.set('x-auth-path', pathname)
-    res.headers.set('x-auth-has-sb-cookie', String(hasSbCookie))
+    res.headers.set('x-auth-has-sb-cookie', String(hasCookie))
     return res
   }
 
@@ -96,7 +97,6 @@ export async function proxy(request: NextRequest) {
         error: userError,
       } = await supabase.auth.getUser()
 
-      const hasSbCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
       if (userError) {
         console.warn('[auth] middleware getUser error', { path: pathname, hasSbCookie, message: userError.message })
         clearSbCookies()
@@ -138,30 +138,30 @@ export async function proxy(request: NextRequest) {
       if (pathname.startsWith('/dashboard')) {
         if (userProfile.role !== 'admin' && userProfile.role !== 'recruiter') {
           if (userProfile.role === 'client') {
-            return redirectWithCookies('/client')
+            return setAuthHeaders(redirectWithCookies('/client'), 'role_redirect_client', hasSbCookie)
           }
           if (userProfile.role === 'candidate') {
-            return redirectWithCookies('/candidate')
+            return setAuthHeaders(redirectWithCookies('/candidate'), 'role_redirect_candidate', hasSbCookie)
           }
-          return redirectWithCookies('/sign-in')
+          return setAuthHeaders(redirectWithCookies('/sign-in'), 'unauthorized_role', hasSbCookie)
         }
       }
 
       if (pathname.startsWith('/client')) {
         if (userProfile.role !== 'client') {
           if (userProfile.role === 'admin' || userProfile.role === 'recruiter') {
-            return redirectWithCookies('/dashboard')
+            return setAuthHeaders(redirectWithCookies('/dashboard'), 'role_redirect_dashboard', hasSbCookie)
           }
-          return redirectWithCookies('/sign-in')
+          return setAuthHeaders(redirectWithCookies('/sign-in'), 'unauthorized_role', hasSbCookie)
         }
       }
 
       if (pathname.startsWith('/candidate')) {
         if (userProfile.role !== 'candidate') {
           if (userProfile.role === 'admin' || userProfile.role === 'recruiter') {
-            return redirectWithCookies('/dashboard')
+            return setAuthHeaders(redirectWithCookies('/dashboard'), 'role_redirect_dashboard', hasSbCookie)
           }
-          return redirectWithCookies('/sign-in')
+          return setAuthHeaders(redirectWithCookies('/sign-in'), 'unauthorized_role', hasSbCookie)
         }
       }
 
@@ -172,6 +172,10 @@ export async function proxy(request: NextRequest) {
         response.headers.delete('x-tenant-id')
       }
       response.headers.set('x-user-role', userProfile.role)
+      response.headers.set('x-auth-allowed', 'true')
+      response.headers.set('x-auth-path', pathname)
+      response.headers.set('x-auth-has-sb-cookie', String(hasSbCookie))
+      response.headers.set('x-auth-user', user.id.slice(0, 8))
 
       return response
     } catch (error) {

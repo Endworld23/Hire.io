@@ -1,56 +1,83 @@
-import { cookies } from 'next/headers'
-import { createSupabaseClient } from '@hire-io/utils'
-import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { signOut } from '@/lib/actions/auth'
+import { createServerSupabase } from '@/lib/supabase-server'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+type DashboardData = {
+  user?: any
+  tenant?: any
+  jobs: any[]
+  candidates: any[]
+  applications: any[]
+  error?: string
+}
 
-async function getDashboardData() {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('sb-access-token')?.value
+type DashboardUserProfile = {
+  id: string
+  full_name?: string | null
+  role: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
+  tenant_id?: string | null
+  tenant?: any
+}
 
-  if (!accessToken) {
-    redirect('/sign-in')
+async function getDashboardData(): Promise<DashboardData> {
+  const supabase = await createServerSupabase()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError) {
+    console.warn('[dashboard] getUser error', { message: userError.message })
+    return { jobs: [], candidates: [], applications: [], error: 'Session error. Please sign in again.' }
   }
-
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
-  const { data: { user } } = await supabase.auth.getUser(accessToken)
 
   if (!user) {
-    redirect('/sign-in')
+    return { jobs: [], candidates: [], applications: [], error: 'Session missing. Please sign in again.' }
   }
 
-  const { data: userProfile } = await supabase
+  const { data: userProfile, error: profileError } = await supabase
     .from('users')
     .select('*, tenant:tenants(*)')
     .eq('id', user.id)
-    .single()
+    .single<DashboardUserProfile>()
 
-  if (!userProfile) {
-    redirect('/sign-in')
+  if (profileError || !userProfile) {
+    console.warn('[dashboard] profile error', { message: profileError?.message, userId: user.id })
+    return { jobs: [], candidates: [], applications: [], error: 'Profile unavailable. Please sign in again.' }
   }
 
-  const { data: jobs } = await supabase
-    .from('jobs')
-    .select('*')
-    .eq('tenant_id', userProfile.tenant_id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  if (!userProfile.tenant_id) {
+    console.warn('[dashboard] missing tenant', { userId: user.id })
+    return { jobs: [], candidates: [], applications: [], error: 'Profile missing tenant. Please sign in again.' }
+  }
 
-  const { data: candidates } = await supabase
-    .from('candidates')
-    .select('*')
-    .eq('owner_tenant_id', userProfile.tenant_id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  const errors: string[] = []
 
-  const { data: applications } = await supabase
-    .from('applications')
-    .select('*')
-    .eq('tenant_id', userProfile.tenant_id)
-    .order('created_at', { ascending: false })
-    .limit(5)
+  const [{ data: jobs, error: jobsError }, { data: candidates, error: candidatesError }, { data: applications, error: applicationsError }] =
+    await Promise.all([
+      supabase
+        .from('jobs')
+        .select('*')
+        .eq('tenant_id', userProfile.tenant_id)
+        .order('created_at', { ascending: false })
+        .limit(5),
+      supabase
+        .from('candidates')
+        .select('*')
+        .eq('owner_tenant_id', userProfile.tenant_id)
+        .order('created_at', { ascending: false })
+        .limit(5),
+      supabase
+        .from('applications')
+        .select('*')
+        .eq('tenant_id', userProfile.tenant_id)
+        .order('created_at', { ascending: false })
+        .limit(5),
+    ])
+
+  if (jobsError) errors.push(`Jobs: ${jobsError.message}`)
+  if (candidatesError) errors.push(`Candidates: ${candidatesError.message}`)
+  if (applicationsError) errors.push(`Applications: ${applicationsError.message}`)
 
   return {
     user: userProfile,
@@ -58,11 +85,24 @@ async function getDashboardData() {
     jobs: jobs || [],
     candidates: candidates || [],
     applications: applications || [],
+    error: errors[0],
   }
 }
 
 export default async function DashboardPage() {
   const data = await getDashboardData()
+
+  if (data.error || !data.user) {
+    return (
+      <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
+        <p className="font-semibold">Session problem — please sign in again.</p>
+        {data.error ? <p className="text-sm">{data.error}</p> : null}
+        <Link className="text-sm font-medium text-blue-700 underline" href="/sign-in">
+          Go to sign-in
+        </Link>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">

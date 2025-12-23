@@ -1,34 +1,45 @@
-import { cookies } from 'next/headers'
-import { createSupabaseClient } from '@hire-io/utils'
-import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { signOut } from '@/lib/actions/auth'
+import { createServerSupabase } from '@/lib/supabase-server'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+type ClientData = {
+  user?: any
+  tenant?: any
+  error?: string
+}
 
-async function getClientData() {
-  const cookieStore = await cookies()
-  const accessToken = cookieStore.get('sb-access-token')?.value
+type ClientUserProfile = {
+  id: string
+  full_name?: string | null
+  role: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
+  tenant?: any
+}
 
-  if (!accessToken) {
-    redirect('/sign-in')
+async function getClientData(): Promise<ClientData> {
+  const supabase = await createServerSupabase()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError) {
+    console.warn('[client] getUser error', { message: userError.message })
+    return { error: 'Session error. Please sign in again.' }
   }
-
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
-  const { data: { user } } = await supabase.auth.getUser(accessToken)
 
   if (!user) {
-    redirect('/sign-in')
+    return { error: 'Session missing. Please sign in again.' }
   }
 
-  const { data: userProfile } = await supabase
+  const { data: userProfile, error: profileError } = await supabase
     .from('users')
     .select('*, tenant:tenants(*)')
     .eq('id', user.id)
-    .single()
+    .single<ClientUserProfile>()
 
-  if (!userProfile || userProfile.role !== 'client') {
-    redirect('/sign-in')
+  if (profileError || !userProfile || userProfile.role !== 'client') {
+    console.warn('[client] profile error', { message: profileError?.message, userId: user.id })
+    return { error: 'Profile unavailable for client role.' }
   }
 
   return {
@@ -39,6 +50,22 @@ async function getClientData() {
 
 export default async function ClientPage() {
   const data = await getClientData()
+
+  if (data.error || !data.user) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="mx-auto max-w-2xl px-4 py-12">
+          <div className="space-y-4 rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
+            <p className="font-semibold">Session problem — please sign in again.</p>
+            {data.error ? <p className="text-sm">{data.error}</p> : null}
+            <Link className="text-sm font-medium text-blue-700 underline" href="/sign-in">
+              Go to sign-in
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
