@@ -70,10 +70,16 @@ export async function proxy(request: NextRequest) {
         error: userError,
       } = await supabase.auth.getUser()
 
-      if (userError || !user) {
-        console.warn('[auth] middleware no-user or error', { message: userError?.message })
+      const hasSbCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
+      if (userError) {
+        console.warn('[auth] middleware getUser error', { path: pathname, hasSbCookie, message: userError.message })
         clearSbCookies()
         return redirectWithCookies('/sign-in?reason=session_expired')
+      }
+
+      if (!user) {
+        console.warn('[auth] middleware no-user', { path: pathname, hasSbCookie })
+        return redirectWithCookies('/sign-in?reason=unauthorized')
       }
 
       const { data: userProfile } = await supabase
@@ -83,9 +89,8 @@ export async function proxy(request: NextRequest) {
         .single<UserProfile>()
 
       if (!userProfile) {
-        console.warn('[auth] middleware no-profile', { userId: user.id })
-        clearSbCookies()
-        return redirectWithCookies('/sign-in?reason=session_expired')
+        console.warn('[auth] middleware no-profile', { path: pathname, userId: user.id })
+        return redirectWithCookies('/sign-in?reason=unauthorized')
       }
 
       if (pathname.startsWith('/dashboard')) {

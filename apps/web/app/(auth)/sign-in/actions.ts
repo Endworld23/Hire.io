@@ -1,5 +1,6 @@
 'use server'
 
+import { redirect } from 'next/navigation'
 import { createServerSupabase, withTimeout } from '@/lib/supabase-server'
 
 type SignInResult = {
@@ -95,7 +96,8 @@ export async function signInWithPassword(formData: FormData): Promise<SignInResu
     }
   }
 
-  return { success: true }
+  console.log('[sign-in] success server redirect')
+  return redirect('/dashboard')
 }
 
 export async function resendConfirmationEmail(formData: FormData): Promise<SignInResult> {
