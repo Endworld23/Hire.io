@@ -12,6 +12,13 @@ type ApplicationRecord = {
   stage: string | null
   tenant_id: string
   created_at: string
+  candidate?: {
+    id: string
+    full_name: string | null
+    email: string | null
+    phone: string | null
+    public_id: string | null
+  } | null
 }
 
 async function getAuthedContext() {
@@ -64,7 +71,17 @@ export async function listApplicationsByJob(jobId: string) {
 
   const { data, error } = await supabase
     .from('applications')
-    .select('id, job_id, candidate_id, stage, tenant_id, created_at')
+    .select(
+      `
+        id,
+        job_id,
+        candidate_id,
+        stage,
+        tenant_id,
+        created_at,
+        candidate:candidates(id, full_name, email, phone, public_id)
+      `,
+    )
     .eq('tenant_id', tenantId)
     .eq('job_id', jobId)
     .order('created_at', { ascending: false })
@@ -117,7 +134,17 @@ export async function createApplication(input: { jobId: string; candidateId: str
       stage: parsed.data.stage ?? 'applied',
       tenant_id: tenantId,
     })
-    .select('id, job_id, candidate_id, stage, tenant_id, created_at')
+    .select(
+      `
+        id,
+        job_id,
+        candidate_id,
+        stage,
+        tenant_id,
+        created_at,
+        candidate:candidates(id, full_name, email, phone, public_id)
+      `,
+    )
     .single()
 
   if (error) {

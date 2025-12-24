@@ -27,6 +27,13 @@ type ApplicationRow = {
   candidate_id: string
   stage: string | null
   created_at: string
+  candidate?: {
+    id: string
+    full_name?: string | null
+    email?: string | null
+    phone?: string | null
+    public_id?: string | null
+  } | null
 }
 
 type CandidateOption = {
@@ -304,7 +311,9 @@ export default function EditJobPage() {
               ) : (
                 applications.map(app => (
                   <tr key={app.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-sm text-slate-900">{app.candidate_id}</td>
+                    <td className="px-4 py-3 text-sm text-slate-900">
+                      {app.candidate?.full_name || app.candidate?.email || app.candidate_id}
+                    </td>
                     <td className="px-4 py-3 text-sm text-slate-700">{app.stage || 'applied'}</td>
                     <td className="px-4 py-3 text-sm text-slate-500">
                       {new Date(app.created_at).toLocaleDateString()}
