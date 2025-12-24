@@ -261,6 +261,16 @@ export default function EditJobPage() {
                   No candidates yet — add or import candidates first.
                 </p>
               )}
+              {candidates.length === 0 && (
+                <div className="mt-3">
+                  <Link
+                    href="/dashboard/candidates"
+                    className="inline-flex items-center rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Add a candidate
+                  </Link>
+                </div>
+              )}
             </div>
             <Button onClick={handleCreateApplication} disabled={isCreating || !job?.id}>
               {isCreating ? 'Creating…' : 'Create Application'}

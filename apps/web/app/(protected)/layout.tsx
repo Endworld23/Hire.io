@@ -17,10 +17,16 @@ import {
 } from 'lucide-react'
 
 const navItems = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Jobs', href: '/dashboard/jobs', icon: Briefcase },
-  { label: 'Candidates', href: '#', icon: Users, disabled: true },
-  { label: 'Applications', href: '#', icon: FileText, disabled: true },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, disabled: false },
+  { label: 'Jobs', href: '/dashboard/jobs', icon: Briefcase, disabled: false },
+  { label: 'Candidates', href: '/dashboard/candidates', icon: Users, disabled: false },
+  {
+    label: 'Applications',
+    href: '/dashboard/jobs',
+    icon: FileText,
+    hint: 'Managed per job',
+    disabled: false,
+  },
 ]
 
 type ProtectedLayoutProps = {
@@ -63,6 +69,7 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
                 key={item.label}
                 href={item.href}
                 aria-disabled={item.disabled}
+                title={item.hint}
                 className={cn(
                   'group relative flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   collapsed ? 'lg:justify-center' : 'gap-3',
@@ -90,6 +97,9 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
                   <span className="ml-auto text-xs text-slate-400">
                     {isSidebarOpen ? 'Soon' : ''}
                   </span>
+                )}
+                {item.hint && isSidebarOpen && !item.disabled && (
+                  <span className="ml-auto text-xs text-slate-400">{item.hint}</span>
                 )}
               </Link>
             )
