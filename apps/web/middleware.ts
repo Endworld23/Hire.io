@@ -11,7 +11,7 @@ type UserProfile = {
   tenant_id: string | null
 }
 
-export async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   let response = NextResponse.next()
   const hasSbCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
