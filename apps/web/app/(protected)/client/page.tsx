@@ -1,21 +1,41 @@
 import Link from 'next/link'
 import { signOut } from '@/lib/actions/auth'
+import { addApplicationFeedback } from '@/lib/actions/applications'
 import { createServerSupabase } from '@/lib/supabase-server'
 
 type ClientData = {
   user?: any
   tenant?: any
   error?: string
+  jobs?: ClientJob[]
+  selectedJob?: ClientJob | null
+  shortlist?: ShortlistItem[]
+  shortlistError?: string | null
 }
 
 type ClientUserProfile = {
   id: string
   full_name?: string | null
   role: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
+  tenant_id?: string | null
   tenant?: any
 }
 
-async function getClientData(): Promise<ClientData> {
+type ClientJob = {
+  id: string
+  title: string
+  status: string | null
+}
+
+type ShortlistItem = {
+  application_id: string
+  candidate_id: string
+  candidate_public_id: string | null
+  stage: string | null
+  created_at: string
+}
+
+async function getClientData(jobId?: string): Promise<ClientData> {
   const supabase = await createServerSupabase()
   const {
     data: { user },
@@ -42,14 +62,49 @@ async function getClientData(): Promise<ClientData> {
     return { error: 'Profile unavailable for client role.' }
   }
 
+  const { data: jobs, error: jobsError } = await supabase
+    .from('jobs')
+    .select('id, title, status')
+    .eq('tenant_id', userProfile.tenant?.id ?? userProfile.tenant_id)
+    .order('created_at', { ascending: false })
+
+  if (jobsError) {
+    console.warn('[client] jobs error', { message: jobsError.message, userId: user.id })
+  }
+
+  const selectedJob =
+    jobId && jobs ? (jobs as ClientJob[]).find((job) => job.id === jobId) ?? null : null
+
+  let shortlist: ShortlistItem[] = []
+  let shortlistError: string | null = null
+
+  if (selectedJob) {
+    const { data: shortlistRows, error: shortlistLoadError } = await (supabase as any).rpc(
+      'client_job_shortlist',
+      {
+        p_job_id: selectedJob.id,
+      },
+    )
+    if (shortlistLoadError) {
+      console.warn('[client] shortlist error', { message: shortlistLoadError.message, jobId: selectedJob.id })
+      shortlistError = shortlistLoadError.message
+    } else {
+      shortlist = (shortlistRows as ShortlistItem[]) || []
+    }
+  }
+
   return {
     user: userProfile,
     tenant: userProfile.tenant,
+    jobs: (jobs as ClientJob[]) || [],
+    selectedJob,
+    shortlist,
+    shortlistError,
   }
 }
 
-export default async function ClientPage() {
-  const data = await getClientData()
+export default async function ClientPage({ searchParams }: { searchParams?: { jobId?: string } }) {
+  const data = await getClientData(searchParams?.jobId)
 
   if (data.error || !data.user) {
     return (
@@ -103,17 +158,126 @@ export default async function ClientPage() {
             </p>
           </div>
 
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">EEO-Blind Candidate Shortlists</h3>
-            <p className="text-gray-600">
-              Your anonymized candidate shortlists will appear here. All candidate information is
-              presented without personal identifiable information to ensure fair and unbiased review.
-            </p>
-            <div className="mt-6">
-              <p className="text-sm text-gray-500 italic">
-                Reference: /docs/security-and-eeo.md - Section 1.1 (EEO-Blind Mode)
+          <div className="bg-white shadow rounded-lg p-6 space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900">EEO-Blind Candidate Shortlists</h3>
+              <p className="text-gray-600">
+                Review anonymized candidates and leave feedback for your job openings.
               </p>
             </div>
+
+            <form method="get" className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700">Job</label>
+                <select
+                  name="jobId"
+                  defaultValue={data.selectedJob?.id ?? ''}
+                  className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">Select a job</option>
+                  {(data.jobs || []).map((job) => (
+                    <option key={job.id} value={job.id}>
+                      {job.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Load shortlist
+              </button>
+            </form>
+
+            {!data.selectedJob && (
+              <p className="text-sm text-gray-500">
+                Choose a job to view its anonymized shortlist.
+              </p>
+            )}
+
+            {data.shortlistError && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                {data.shortlistError}
+              </div>
+            )}
+
+            {data.selectedJob && (
+              <div className="overflow-hidden rounded-md border border-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Candidate ID
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Stage
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">
+                        Feedback
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white">
+                    {(data.shortlist || []).length === 0 ? (
+                      <tr>
+                        <td className="px-4 py-3 text-sm text-gray-500" colSpan={3}>
+                          No applications yet for this job.
+                        </td>
+                      </tr>
+                    ) : (
+                      (data.shortlist || []).map((item) => (
+                        <tr key={item.application_id}>
+                          <td className="px-4 py-3 text-sm text-gray-900">
+                            {item.candidate_public_id || item.candidate_id}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{item.stage || 'applied'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">
+                            <form action={addApplicationFeedback} className="space-y-2">
+                              <input type="hidden" name="applicationId" value={item.application_id} />
+                              <input type="hidden" name="jobId" value={data.selectedJob?.id || ''} />
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-600">Rating</label>
+                                  <select
+                                    name="rating"
+                                    className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900"
+                                    defaultValue=""
+                                  >
+                                    <option value="">Optional</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                  </select>
+                                </div>
+                                <div className="flex-1">
+                                  <label className="block text-xs font-medium text-gray-600">Comment</label>
+                                  <input
+                                    name="comment"
+                                    required
+                                    minLength={3}
+                                    className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1 text-sm text-gray-900"
+                                    placeholder="Add feedback..."
+                                  />
+                                </div>
+                                <button
+                                  type="submit"
+                                  className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-sm hover:bg-gray-50"
+                                >
+                                  Submit
+                                </button>
+                              </div>
+                            </form>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
