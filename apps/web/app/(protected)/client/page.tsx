@@ -11,6 +11,8 @@ type ClientData = {
   selectedJob?: ClientJob | null
   shortlist?: ShortlistItem[]
   shortlistError?: string | null
+  feedbackByApplication?: Record<string, FeedbackEntry[]>
+  feedbackError?: string | null
 }
 
 type ClientUserProfile = {
@@ -33,6 +35,15 @@ type ShortlistItem = {
   candidate_public_id: string | null
   stage: string | null
   created_at: string
+}
+
+type FeedbackEntry = {
+  id: string
+  application_id: string
+  rating: number | null
+  comment: string
+  created_at: string
+  author_user_id: string | null
 }
 
 async function getClientData(jobId?: string): Promise<ClientData> {
@@ -62,10 +73,11 @@ async function getClientData(jobId?: string): Promise<ClientData> {
     return { error: 'Profile unavailable for client role.' }
   }
 
+  const tenantId = userProfile.tenant?.id ?? userProfile.tenant_id ?? null
   const { data: jobs, error: jobsError } = await supabase
     .from('jobs')
     .select('id, title, status')
-    .eq('tenant_id', userProfile.tenant?.id ?? userProfile.tenant_id)
+    .eq('tenant_id', tenantId)
     .order('created_at', { ascending: false })
 
   if (jobsError) {
@@ -77,6 +89,8 @@ async function getClientData(jobId?: string): Promise<ClientData> {
 
   let shortlist: ShortlistItem[] = []
   let shortlistError: string | null = null
+  let feedbackByApplication: Record<string, FeedbackEntry[]> = {}
+  let feedbackError: string | null = null
 
   if (selectedJob) {
     const { data: shortlistRows, error: shortlistLoadError } = await (supabase as any).rpc(
@@ -91,6 +105,23 @@ async function getClientData(jobId?: string): Promise<ClientData> {
     } else {
       shortlist = (shortlistRows as ShortlistItem[]) || []
     }
+
+    const { data: feedbackRows, error: feedbackLoadError } = await supabase
+      .from('job_application_feedback')
+      .select('id, application_id, rating, comment, created_at, author_user_id')
+      .eq('job_id', selectedJob.id)
+
+    if (feedbackLoadError) {
+      console.warn('[client] feedback error', { message: feedbackLoadError.message, jobId: selectedJob.id })
+      feedbackError = feedbackLoadError.message
+    } else {
+      for (const row of (feedbackRows as FeedbackEntry[]) || []) {
+        if (!feedbackByApplication[row.application_id]) {
+          feedbackByApplication[row.application_id] = []
+        }
+        feedbackByApplication[row.application_id].push(row)
+      }
+    }
   }
 
   return {
@@ -100,6 +131,8 @@ async function getClientData(jobId?: string): Promise<ClientData> {
     selectedJob,
     shortlist,
     shortlistError,
+    feedbackByApplication,
+    feedbackError,
   }
 }
 
@@ -201,6 +234,11 @@ export default async function ClientPage({ searchParams }: { searchParams?: { jo
                 {data.shortlistError}
               </div>
             )}
+            {data.feedbackError && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                {data.feedbackError}
+              </div>
+            )}
 
             {data.selectedJob && (
               <div className="overflow-hidden rounded-md border border-gray-200">
@@ -270,6 +308,26 @@ export default async function ClientPage({ searchParams }: { searchParams?: { jo
                                 </button>
                               </div>
                             </form>
+                            {(data.feedbackByApplication?.[item.application_id] || []).length > 0 && (
+                              <div className="mt-3 space-y-2 text-xs text-gray-600">
+                                {(data.feedbackByApplication?.[item.application_id] || []).map((entry) => (
+                                  <div key={entry.id} className="rounded border border-gray-200 bg-gray-50 p-2">
+                                    <div className="flex items-center justify-between text-gray-500">
+                                      <span>
+                                        {entry.rating ? `Rating: ${entry.rating}` : 'No rating'}
+                                      </span>
+                                      <span>
+                                        {new Date(entry.created_at).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                    <p className="mt-1 text-gray-700">{entry.comment}</p>
+                                    {entry.author_user_id === data.user?.id && (
+                                      <p className="mt-1 text-[11px] text-gray-400">You submitted</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))

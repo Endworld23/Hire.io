@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createServerSupabase, withTimeout } from '@/lib/supabase-server'
+import { getAuthRedirectDestination } from '@/lib/actions/auth'
 
 type SignInResult = {
   success: boolean
@@ -97,7 +98,8 @@ export async function signInWithPassword(formData: FormData): Promise<SignInResu
   }
 
   console.log('[sign-in] success server redirect')
-  return redirect('/dashboard')
+  const destination = await getAuthRedirectDestination()
+  return redirect(destination)
 }
 
 export async function resendConfirmationEmail(formData: FormData): Promise<SignInResult> {

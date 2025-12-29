@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseClient, type SupabaseClient } from '@hire-io/utils'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { getAuthRedirectDestination } from '@/lib/actions/auth'
 
 type SignUpResult = {
   success: boolean
@@ -239,7 +240,8 @@ export async function signUpWithTenant(
   }
 
   if (session) {
-    redirect('/dashboard')
+    const destination = await getAuthRedirectDestination()
+    redirect(destination)
   }
 
   return {

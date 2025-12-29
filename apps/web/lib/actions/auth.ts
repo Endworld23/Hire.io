@@ -209,3 +209,42 @@ export async function updatePassword(password: string) {
 
   return { success: true }
 }
+
+type UserProfile = {
+  role: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
+  tenant_id: string | null
+}
+
+export async function getAuthRedirectDestination(): Promise<string> {
+  const supabaseServer = await createServerSupabase()
+  const {
+    data: { user },
+    error: userError,
+  } = await supabaseServer.auth.getUser()
+
+  if (userError || !user) {
+    return '/sign-in'
+  }
+
+  const { data: profile, error: profileError } = await supabaseServer
+    .from('users')
+    .select('role, tenant_id')
+    .eq('id', user.id)
+    .single<UserProfile>()
+
+  if (profileError || !profile || !profile.tenant_id) {
+    return '/onboarding?reason=missing_profile'
+  }
+
+  if (profile.role === 'admin' || profile.role === 'recruiter') {
+    return '/dashboard'
+  }
+  if (profile.role === 'client') {
+    return '/client'
+  }
+  if (profile.role === 'candidate') {
+    return '/candidate'
+  }
+
+  return '/sign-in'
+}

@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { getAuthRedirectDestination } from '@/lib/actions/auth'
 
 export async function ensureProfile() {
   const supabase = (await createServerSupabase()) as any
@@ -22,7 +23,8 @@ export async function ensureProfile() {
     .single()
 
   if (existingProfile && existingProfile.tenant_id) {
-    return redirect('/dashboard')
+    const destination = await getAuthRedirectDestination()
+    return redirect(destination)
   }
 
   // Create a tenant if missing
@@ -58,5 +60,6 @@ export async function ensureProfile() {
     return { success: false, error: 'Unable to update profile' }
   }
 
-  return redirect('/dashboard')
+  const destination = await getAuthRedirectDestination()
+  return redirect(destination)
 }
