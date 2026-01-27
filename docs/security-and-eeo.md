@@ -96,6 +96,18 @@ AI outputs must not:
 
 ---
 
+## AI-Assisted Hiring Compliance Requirements
+
+When AI is used for screening, matching, or summarization, Hire.io must provide:
+
+- **Bias audit support:** Ability to review inputs/outputs and sampling for disparate impact analysis.  
+- **Notices/consent:** Clear notices when AI is involved and candidate consent where required.  
+- **Opt-out/alternatives:** A non-AI path or human review option when applicable.  
+- **Adverse impact monitoring:** Periodic reporting hooks tied to outcomes and stages.  
+- **Record retention:** Retain decision artifacts and notices for legally required windows.  
+
+---
+
 ## 🧱 2) Data Security Model
 
 Postgres + RLS-centric, strict separation of platform vs tenant data.

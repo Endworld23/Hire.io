@@ -171,6 +171,16 @@ All tables have Row Level Security (RLS); tenant isolation is enforced via JWT `
 - EEO-blind client portal per job  
 - First version of AI-assisted matching and pool gauge  
 
+### Validated Problems → Phase 1 Epics
+
+| Validated Problem | Phase 1 Epic (MVP Scope) |
+|---|---|
+| Opacity and “black box” outcomes | **Transparency/status system** for candidates + client-facing visibility guardrails |
+| Feedback black holes | **Compliant closure/feedback** workflows and templates |
+| Ghost jobs / low-truth postings | **Job integrity signals** (freshness + intent indicators) |
+| Credential inflation / poor calibration | **Calibrated job intake** with realistic requirements |
+| Compliance pressure & audit risk | **Auditability baseline** (decision trace + immutable events) |
+
 ### Modules
 
 #### 1. Authentication & Onboarding
@@ -192,6 +202,7 @@ All tables have Row Level Security (RLS); tenant isolation is enforced via JWT `
 #### 2. Core ATS (Per Tenant)
 
 - Job requisition builder (with AI intake Q&A)  
+- Calibrated job intake to improve requirement realism  
 - Job listing, editing, status transitions (`draft` → `active` → `closed`/`archived`)  
 - Candidate application creation:
   - From global candidate self-apply  
@@ -210,6 +221,7 @@ All tables have Row Level Security (RLS); tenant isolation is enforced via JWT `
 - Feedback actions:
   - Approve / reject / request interview  
   - Updates `applications.stage` and writes `job_application_feedback`  
+- Compliant closure/feedback templates for candidate updates  
 - Controlled, watermark viewer for any resume-like views (no raw exports)
 
 #### 4. Search & Matching (v1)
@@ -233,6 +245,7 @@ All tables have Row Level Security (RLS); tenant isolation is enforced via JWT `
   - New candidate applied  
   - Client feedback submitted  
   - Interview requested / status changed  
+- Status updates for candidate transparency and closure  
 - Provider:
   - Resend or SendGrid integration  
 - Templates:
@@ -244,6 +257,7 @@ All tables have Row Level Security (RLS); tenant isolation is enforced via JWT `
   - Active jobs per recruiter  
   - Candidate funnel counts per job (per stage)  
   - Basic time-to-fill metric (based on `events` and `applications` timestamps)  
+  - Auditability baseline using immutable `events` logs  
 
 ---
 

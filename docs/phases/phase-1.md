@@ -35,6 +35,16 @@ This phase prioritizes **correctness, compliance, and usability** over depth, au
 
 ---
 
+## ✅ Phase 1 Epics (Validated Problems)
+
+* **Transparency/status system** for candidates (visibility into stage + closure)
+* **Compliant closure/feedback** workflows and templates
+* **Job integrity signals** (freshness + intent indicators)
+* **Calibrated job intake** to reduce requirement inflation
+* **Auditability baseline** (decision trace via `events`)
+
+---
+
 ## 🗂️ In‑Scope vs Out‑of‑Scope
 
 ### ✅ In Scope (Phase 1)
@@ -42,6 +52,10 @@ This phase prioritizes **correctness, compliance, and usability** over depth, au
 * Global candidate sign‑up & profile management
 * Tenant onboarding (agency creation + invites)
 * Core ATS workflows (jobs, candidates, applications, pipeline)
+* Transparency/status system for candidate visibility
+* Compliant closure/feedback workflows
+* Job integrity signaling (freshness + intent indicators)
+* Calibrated job intake (realistic requirements)
 * Recruiter & admin dashboards
 * EEO‑blind client portal per job
 * Basic AI matching, leniency slider, pool gauge (v1)
@@ -55,6 +69,14 @@ This phase prioritizes **correctness, compliance, and usability** over depth, au
 * Messaging threads & scheduling
 * White‑labeling & branded domains
 * Advanced automation & predictive analytics
+
+---
+
+## 🚫 Non‑Goals (Prevent Over‑Automation)
+
+* Fully automated hiring decisions without human review
+* “Hands‑off” auto‑rejection at scale
+* Black‑box AI outcomes without explainability or audit trails
 
 ---
 
@@ -267,6 +289,9 @@ All `/app/*` routes:
 * [ ] Tenant admin can create jobs and invite users
 * [ ] Recruiter can manage pipeline
 * [ ] Client sees only EEO‑blind data
+* [ ] Job postings show integrity signals (freshness + intent indicators)
+* [ ] Candidate receives compliant closure on rejection with standardized templates
+* [ ] Every rejection and shortlist action writes a traceable `events` log entry
 * [ ] No cross‑tenant access possible
 * [ ] Tables load real data
 * [ ] Charts reflect table data

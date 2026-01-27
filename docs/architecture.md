@@ -572,6 +572,17 @@ Create `.env.local` (Next.js) and `.env` (local dev as needed):
 
 ---
 
+## Trust & Auditability Requirements
+
+The platform must maintain a defensible audit trail for AI-assisted and human decisions. Minimum requirements:
+
+- **Decision trace log:** Every material action (screening, rejection, shortlist changes, feedback) writes to `events`.  
+- **Explainability metadata:** Store structured reasons and model inputs/outputs in `events.metadata` or adjacent tables.  
+- **Compliance/jurisdiction flags:** Capture applicable rulesets (e.g., AEDT notices, consent state) per job/application.  
+- **Immutable audit trail:** Audit entries are append-only and never edited in place.  
+
+---
+
 ## 12) Deployment Plan
 
 ### 12.1 MVP
