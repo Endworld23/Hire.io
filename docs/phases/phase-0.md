@@ -1,266 +1,189 @@
-# 🚀 Hire.io — Phase 0: Foundations & Architecture Setup
+# Hire.io — Phase 0: Foundations (Truth, Safety, and Non‑Drift)
 
-> **Version:** 1.1  
-> **Owner:** Aaron Martin  
-> **Pairs with:** `architecture.md`, `roadmap.md`, `security-and-eeo.md`  
-> **Purpose:** Define the exact deliverables, decisions, and system setup accomplished in **Phase 0**.  
-> **Outcome:** A stable foundation for Phase 1 (MVP).
-
----
-
-# 📌 Phase 0 Summary
-
-Phase 0 establishes all **infrastructure, schema, security posture, and documentation** needed before building the real Hire.io MVP.  
-It ensures the repo and system are aligned to:
-
-- Multi-tenant architecture  
-- Global candidate pool vision  
-- EEO-blind compliance  
-- Secure RLS patterns  
-- AI-assisted hiring workflows  
-- Clear Phase 1 roadmap  
-
-Phase 0 is **not about building features** — it is about building the platform that will support them.
+> **Status:** Re-baselined
+> **Owner:** Aaron Martin
+> **Last Updated:** January 2026
+> **Canonical Inputs:** `docs/vision.md`, `docs/roadmap.md`, `docs/architecture.md`, `docs/security-and-eeo.md`
+>
+> **Purpose (Phase 0):** Create a foundation that makes it **hard to accidentally build an Indeed/ZipRecruiter clone**.
+>
+> Phase 0 is the platform’s **non-negotiable scaffolding**: tenancy, security, EEO-blindness, auditability, and documentation discipline.
 
 ---
 
-# 📚 1) Documentation Created & Updated
+## 0.1 What Phase 0 Is (and Isn’t)
 
-### Completed in Phase 0:
+### Phase 0 is:
 
-- ✔ **`roadmap.md`** — Master product & feature reference  
-- ✔ **`architecture.md`** — Full system architecture (MVP → Growth)  
-- ✔ **`security-and-eeo.md`** — EEO-blind and security compliance framework  
-- ✔ **`phase-0.md`** — (This file) finalized  
-- ✔ Established standard commit structure: `feat(phaseX-feature): ...`  
-- ✔ Defined global vs tenant data boundaries  
+* A **governance and infrastructure** phase
+* The place where we lock in constraints that protect the vision
+* The phase where the schema + RLS become a defensible “contract”
 
-Documentation now serves as the **source of truth** for all future development.
+### Phase 0 is not:
 
----
+* Feature delivery
+* Product polish
+* A marketplace launch
+* “Just enough docs”
 
-# 🏗️ 2) Project Structure & Tooling
-
-### Folder Structure Initialized
-
-hire-io/
-├─ app/ # Next.js application
-├─ components/ # UI components
-├─ lib/ # Supabase client, helpers
-├─ public/ # Assets, logos
-├─ supabase/ # Migrations, types, config
-└─ docs/ # Architecture, roadmap, security, phases
-
-
-### Tools & Frameworks Installed
-
-- ✔ **Next.js 16**
-- ✔ **React 19**
-- ✔ **Tailwind CSS**
-- ✔ **TypeScript (strict)**
-- ✔ **Supabase CLI**
-- ✔ **Vercel for deployment**
-- ✔ **GitHub repo structure**
-- ✔ **AI-assisted coding workflow (Codex / Auto-Context)**
+If Phase 0 is done correctly, Phase 1 becomes straightforward — and later phases cannot drift into legacy hiring anti-patterns.
 
 ---
 
-# 🗄️ 3) Database Schema — Consolidated & Finalized
+## 0.2 Phase 0 Non‑Negotiables (Derived from Vision)
 
-Phase 0 delivered the **authoritative Phase 1-ready schema**, including:
+These constraints must be true **before** Phase 1 ships:
 
-### Core Tables (Tenant Scope)
-
-- `tenants` — agency organizations  
-- `users` — multi-tenant users with role (`super_admin`, `admin`, `recruiter`, `client`, `candidate`)  
-- `jobs` — job requisitions  
-- `candidates` — agency-owned candidate records  
-- `applications` — candidate→job pipelines  
-- `stages` — per-tenant pipeline definitions  
-- `events` — audit log  
-- `skills` — skill taxonomy  
-- `job_application_feedback` — structured feedback
-
-### Global Platform Tables (Future-Proofed)
-
-- `global_candidates` (placeholder for future Phase 3+ expansion)  
-- Global/tenant linking patterns defined conceptually  
-
-### Security Layer
-
-- **Row-Level Security (RLS)** fully enabled  
-- Policies enforce:  
-  - tenant isolation  
-  - role-based writes  
-  - EEO-blind client visibility  
-  - safe candidate editing  
-- JWT metadata standardized:  
-  - `tenant_id`, `role`, `user_id`, `email_verified`
-
-### Indexing & Performance
-
-- GIN indexes for JSONB fields (skills/spec)  
-- B-tree indexes on foreign keys and common query columns  
+1. **No mass-apply mechanics** (no one-click apply amplification)
+2. **No open candidate browsing/search** of the global pool
+3. **Applications are the visibility bridge** (tenants see candidates only via import or job application linkage)
+4. **EEO-blind client views are default** (PII never appears in client context)
+5. **Auditability is real** (material actions emit immutable events)
+6. **Tenant isolation is provable** (RLS + tests + UI verification)
 
 ---
 
-# 🔐 4) Authentication & Role Framework
+## 0.3 Deliverables (Authoritative)
 
-### Role Model Finalized:
+Phase 0 is complete only when all deliverables below are satisfied.
 
-| Role | Scope | Description |
-|------|--------|-------------|
-| **super_admin** | Platform | Platform staff; can manage tenants and global operations |
-| **admin** | Tenant | Agency owner; full CRUD within tenant |
-| **recruiter** | Tenant | Operates ATS; manages jobs/candidates |
-| **client** | Tenant | End-employer; EEO-blind shortlist access |
-| **candidate** | Tenant/Global | Job seeker; owns their own data |
+### A) Documentation System (Repo as Source of Truth)
 
-### Auth Flow (Planned in Phase 1)
+Required docs (must exist and be internally consistent):
 
-- Supabase Auth (email/password + social login)
-- JWTs include tenant & role metadata
-- Service role key reserved for backend jobs only
+* `docs/vision.md` — industry inversion charter (canonical)
+* `docs/roadmap.md` — phase sequencing + prohibitions (canonical)
+* `docs/architecture.md` — system design, flows, data model, RLS patterns
+* `docs/security-and-eeo.md` — privacy, EEO-blind rules, AI guardrails
+* `docs/readme.md` — how to navigate docs and which files are canonical
 
----
+Docs governance:
 
-# ⚖️ 5) EEO-Blind Design Finalized
+* Each doc has: status, owner, last updated
+* No duplicate “sources of truth”
+* Any PR changing data flows must update the relevant docs
 
-Client-facing views must:
+### B) Repo Structure and Build Discipline
 
-- hide PII  
-- use alias IDs (`public_id`)  
-- redact resume text  
-- apply AI-based PII filtering  
-- watermark documents  
-- log all views in `events`
+Repo must have clear structure and stable tooling:
 
-The compliance pattern is now locked in for Phase 1.
+* Next.js app structure established
+* `supabase/migrations/` is canonical for schema history
+* Environment variable conventions documented
+* Lint/build scripts run cleanly
 
----
+### C) Database Contract (Schema + RLS)
 
-# 🧠 6) AI Strategy — Foundation Laid
+The database is the enforcement layer. Phase 0 requires:
 
-Phase 0 defines:
+1. **Consolidated schema migration exists and is authoritative**
 
-### AI Pipelines
+* Location: `supabase/migrations/<timestamp>_consolidated_schema.sql`
+* All tables have explicit RLS enablement
 
-- **Job Intake Calibration**  
-- **Fit Narratives**  
-- **Candidate→Job Matching**  
-- **Sanitization Pipeline**  
-- **Leniency Slider logic concept**  
+2. **Tenant isolation policies exist and are consistent**
 
-### Guardrails
+* Tenant tables must enforce `tenant_id` scoping at the DB layer
 
-- Explicit anti-bias instructions  
-- No demographic inference  
-- Sanitized prompts for client-facing use  
-- Logging structure for all AI actions  
+3. **Visibility bridge is enforced**
 
-AI infrastructure will be built in **Phase 1 and Phase 2**.
+* Tenants can only see:
 
----
+  * Candidates they imported (`owner_tenant_id = tenant_id`), and/or
+  * Candidates linked via `applications` within their tenant
 
-# 💅 7) UI/UX Foundations
+4. **Candidate self-ownership is enforced**
 
-Core components scaffolded (mock / placeholder):
+* Candidates can view/update their own candidate record via `user_id = auth.uid()`
 
-- Job Intake Wizard  
-- Candidate Profile Builder  
-- Resume Upload  
-- Leniency Slider  
-- Salary Gauge  
-- Shortlist Viewer  
-- Admin Table Views  
+5. **Client role is EEO-blind**
 
-These are **UI shells**, not fully functional — placeholders for Phase 1 flows.
+* Client reads must exclude PII fields in server responses
+* Client access must be job-scoped
 
----
+6. **Events/audit trail is append-only by policy**
 
-# 🌐 8) DevOps, CI/CD, and Environment Setup
+* Core actions must emit `events` (or equivalent)
 
-### Completed:
+### D) Security, Privacy, and AI Guardrails (Baseline)
 
-- Local dev launch flow (`npm run dev`)
-- Vercel deployment pipeline  
-- `.env.local` example added  
-- Supabase project initial setup  
-- Migration workflow established  
-- GitHub branching/commit rules established  
-- Security/EEO review required for any schema change  
+Phase 0 locks in rules that prevent future harm:
 
-### Phase 1 work will add:
+* PII redaction rules documented
+* Client portal redaction rules documented
+* AI prompt safety constraints documented
+* Logging standards documented (PII removed; model + template IDs tracked)
 
-- CI checks  
-- Sentry  
-- Test environment  
-- Real auth middleware  
+### E) Local + Hosted Environment Readiness
+
+Must be documented (even if development is not local-first):
+
+* `.env.example` or clear env docs
+* How to point the app to Supabase
+* How migrations are applied
+* Vercel deployment expectations and required secrets
 
 ---
 
-# 📌 9) What Phase 0 Does **Not** Include
+## 0.4 “Done” Definition (Acceptance Criteria)
 
-To avoid scope creep, Phase 0 intentionally excludes:
+Phase 0 is done when:
 
-- Real authentication  
-- Resume parsing  
-- Live matching engine  
-- Client portal logic  
-- Agency onboarding wizard  
-- File upload permissions  
-- Email/SMS notifications  
-- Billing  
-- Analytics dashboards  
-- Domain setup  
-
-All of these are Phase 1–3 responsibilities.
+* [ ] All canonical docs exist and are aligned (no contradictions)
+* [ ] Repo docs have a single navigation entry (`docs/readme.md`)
+* [ ] Consolidated schema migration exists and reflects reality
+* [ ] RLS enabled on all tenant-sensitive tables
+* [ ] Cross-tenant reads are impossible using anon/auth keys
+* [ ] Candidate self-access works (read/update) and is isolated
+* [ ] Client role cannot retrieve PII in any route
+* [ ] Events are written for core actions (at least: stage change, client feedback, candidate view)
+* [ ] A “drift audit checklist” exists and can be rerun before major releases
 
 ---
 
-# 🧩 10) Acceptance Criteria — Phase 0 (Completed)
+## 0.5 What Phase 0 Explicitly Does Not Include
 
-| Requirement | Status |
-|------------|--------|
-| Consolidated schema created & validated | ✔ |
-| Multi-tenant RLS patterns established | ✔ |
-| Final role system defined | ✔ |
-| Documentation updated (roadmap, architecture, EEO/security) | ✔ |
-| Repo structure established | ✔ |
-| Supabase migrations prepared | ✔ |
-| Codex workflow established for Phase 1 work | ✔ |
+Phase 0 excludes:
 
----
+* Full auth onboarding UX polish
+* Resume parsing + extraction pipelines
+* Matching engine beyond definitions
+* Notifications (email/SMS)
+* Billing
+* Integrations (calendar, job boards)
+* Marketplace mechanics
 
-# 🎯 11) Next Steps — Phase 1 (MVP Pilot)
-
-Phase 1 will deliver the **working ATS** for 3–5 pilot agencies:
-
-- Real Supabase Auth  
-- Global candidate onboarding  
-- Recruiter dashboard  
-- Client EEO-blind portal  
-- AI-assisted job intake & matching  
-- Resume parsing  
-- Pipeline stages & drag-and-drop  
-- Email/notification basics  
-
-See `docs/roadmap.md` and `architecture.md` for full breakdown.
+Those belong to Phase 1+ and must be gated by the vision constraints above.
 
 ---
 
-# ✅ Conclusion
+## 0.6 Phase 0 Outputs (What We Expect to Have in the Repo)
 
-Phase 0 provides:
+Minimum expected file set:
 
-- A complete architecture  
-- A secure, scalable database  
-- A clear compliance framework  
-- A clean codebase ready for real features  
-- A unified roadmap and ground truth for all future work  
-
-Hire.io is now ready to begin **Phase 1 (MVP)** and build the first real version of the platform.
+* `README.md`
+* `docs/readme.md`
+* `docs/vision.md`
+* `docs/roadmap.md`
+* `docs/architecture.md`
+* `docs/security-and-eeo.md`
+* `docs/phases/phase-0.md` (this doc)
+* `docs/phases/phase-1.md`
+* `docs/runbooks/*` (placeholders allowed, but indexed)
+* `docs/compliance/*` (SOC2 checklist + policies)
 
 ---
 
-*End of Phase 0 Foundations Document*
+## 0.7 Next: Phase 1 Readiness Gate
+
+We do **not** start Phase 1 execution until Phase 0 acceptance criteria are green.
+
+Phase 1 begins once:
+
+* the platform cannot drift into open resume browsing,
+* client views cannot leak identity,
+* and multi-tenant isolation is demonstrably enforced.
+
+---
+
+*End of Phase 0 Foundations (Truth, Safety, and Non‑Drift)*

@@ -1,322 +1,225 @@
-# Hire.io – Phase 0 / Early Phase 1
-### AI-Powered Staffing & Hiring Platform – Foundation Build
+# Hire.io
 
-Hire.io is a next-generation **staffing agency enablement platform** that uses AI to reduce bias, streamline recruitment, and connect the right candidates with the right opportunities.
+> **Status:** Phase 0 complete · Phase 1 in progress
+> **Product Type:** B2B-first, multi-tenant ATS and hiring infrastructure platform
 
-It combines:
+Hire.io is a **B2B-first hiring infrastructure platform** designed to reverse the traditional hiring model.
 
-- A **multi-tenant ATS** for staffing agencies and employers  
-- A **global candidate pool** (Hire.io-managed marketplace)  
-- **EEO-blind, AI-assisted matching** between jobs and candidates  
+Instead of candidates endlessly applying to job boards, **Hire.io enables employers and staffing agencies to discover qualified candidates through calibrated demand, trust-preserving workflows, and bias-minimized review**.
 
----
+Hire.io is not a job board.
+Hire.io is not a résumé database.
 
-# Overview
-
-Phase 0 established the foundation:
-
-- A complete **multi-tenant database schema**
-- Core **UI components**, mock flows, and demo pages  
-- Documentation for **architecture, security, and SOC2 readiness**
-
-We are now transitioning into **Phase 1**, where the real system begins:
-
-- Supabase auth (real login, signup, tenant onboarding)
-- Real candidate profiles + applications
-- EEO-blind client review flows  
-- AI-assisted matching + candidate pool gauge
-
-> **Note:** Much of the AI & matching logic is still mocked. The goal is to illustrate UX and workflows while the backend becomes fully wired.
+It is a **multi-tenant ATS for staffing agencies** that intentionally lays the groundwork for a future, permissioned candidate network where discovery flows from employer → candidate.
 
 ---
 
-# Features
+## Where to Start (Important)
 
-## Employer & Agency Features (Tenant Side)
+If you are new to this repository, read these in order:
 
-- **Job Intake Wizard** – Multi-step job creation flow  
-- **Leniency Slider** – Controls strict ↔ lenient matching logic  
-- **Salary Gauge** – Visual range picker with mock market guidance  
-- **Anonymized Shortlist** – Removes personal info for bias reduction  
-- **Match Scoring (Mock)** – AI-style compatibility scoring  
-- **Pipeline Stages** – `new → recruiter_screen → submitted_to_client → interview → offer → hired/rejected`
+1. **`docs/vision.md`** — Canonical vision and non-negotiable constraints
+2. **`docs/roadmap.md`** — Phases and long-term sequencing
+3. **`docs/architecture.md`** — System design and data boundaries
+4. **`docs/security-and-eeo.md`** — Bias minimization and compliance model
 
----
-
-## Candidate Features (Global User Side)
-
-- **Profile Builder** – Guided onboarding  
-- **Resume Upload** – Drag-and-drop (stubbed)  
-- **Skill Extraction (Mock)** – Placeholder parsing logic  
-- **Experience Tracking** – Stored in structured `jsonb` fields  
-- **Global Accounts** – Candidates may exist without belonging to a tenant  
+The rest of the documentation derives from those documents.
 
 ---
 
-## Admin / Internal Tools (Future)
+## Product Overview
 
-- **Global Candidate Pool Management**  
-- **Tenant Management** (agencies, subdomains, settings)  
-- **Audit Log** (events, views, updates, AI usage)  
-- **Structured Feedback** on applications  
+Hire.io is built around a **two-layer model**:
 
----
+### 1. Tenant Layer (Foundational — B2B)
 
-# Tech Stack
+A fully isolated, multi-tenant ATS for staffing agencies and employers, providing:
 
-- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS  
-- **Backend:** Supabase (PostgreSQL, Auth, Storage)  
-- **Security:** PostgreSQL Row Level Security (RLS)  
-- **Styling:** Tailwind CSS design system  
+* Job intake and calibration
+* Recruiter pipelines and workflows
+* EEO-blind client review portals
+* Candidate application management
+* Audit logs and compliance artifacts
 
----
+This layer must stand alone as a viable SaaS product.
 
-# Getting Started
+### 2. Global Candidate Layer (Derived — Permissioned)
 
-## Prerequisites
+A Hire.io-managed candidate network that:
 
-- Node.js 18+  
-- Supabase account  
-- Environment variables stored in `.env.local`:
+* Allows candidates to maintain a single, durable profile
+* Requires explicit consent for discovery
+* Does **not** allow open browsing or résumé search
+* Enables aggregate pool insights without identity exposure
 
-    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url  
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+The global layer is intentionally constrained and evolves only after trust is established at the tenant layer.
 
 ---
 
-## Installation
+## Current Phase
 
-From the project root:
+### Phase 0 — Foundation (Complete)
 
-    npm install
-    npm run dev
+Phase 0 focused on **structure, correctness, and constraints**, not production features.
 
-Open the app at:
+Completed work includes:
 
-- http://localhost:3000  
-- http://localhost:3000/demo (interactive demo)
+* Authoritative multi-tenant database schema
+* Row Level Security (RLS) enforcing tenant isolation
+* Core UI components and demo flows
+* Architecture, security, and compliance documentation
 
----
+### Phase 1 — Pilot MVP (In Progress)
 
-# Exploring the Demo (Phase 0)
+Phase 1 transitions the system from demo to **real, end-to-end workflows**:
 
-The `/demo` route allows you to:
+* Supabase authentication and role-based access
+* Real candidate profiles and applications
+* Tenant onboarding and recruiter workflows
+* EEO-blind client-facing review flows
+* Initial (guardrailed) AI-assisted matching
 
-- Walk through an **example job intake**  
-- Apply as a candidate (mocked)  
-- View **AI-style matches**  
-- Review **anonymized shortlists**  
-- Browse conceptual **admin tables**  
-- (Optional) seed mock data for UI testing  
-
-This demo is **UI-only** and illustrates the vision while the backend becomes fully wired.
+> Note: Some AI and matching logic remains mocked or heuristic-driven during early Phase 1. UX and system boundaries take priority over optimization.
 
 ---
 
-# Project Structure
+## Core Principles Encoded in This Repo
 
-    hire-io/
-    ├── app/
-    │   ├── page.tsx                        # Landing page
-    │   └── demo/
-    │       └── page.tsx                    # Interactive demo
-    ├── components/
-    │   ├── AdminTableView.tsx
-    │   ├── AnonymizedShortlist.tsx
-    │   ├── CandidateProfileBuilder.tsx
-    │   ├── JobIntakeWizard.tsx
-    │   ├── LeniencySlider.tsx
-    │   ├── ResumeUpload.tsx
-    │   └── SalaryGauge.tsx
-    ├── lib/
-    │   ├── supabase.ts                     # Supabase client
-    │   └── auth.ts                         # Phase 1 auth helpers
-    └── supabase/
-        └── migrations/                     # Authoritative schema
+* **Tenant isolation is non-negotiable**
+* **Candidates are durable profiles, not disposable résumés**
+* **Discovery flows employer → candidate**
+* **Bias is reduced structurally, not optionally**
+* **AI assists clarity; humans retain authority**
+* **Existence does not imply visibility**
+
+Any implementation that violates these principles is incorrect, even if it “works.”
 
 ---
 
-# Database Schema (Consolidated)
+## Feature Surface (Representative, Not Exhaustive)
 
-The authoritative schema includes:
+### Tenant / Agency Capabilities
 
-### tenants  
-Multi-tenant root model for agencies/employers.
+* Job intake wizard with calibrated requirements
+* Leniency slider to control matching strictness
+* Structured salary ranges
+* Recruiter pipelines and stage management
+* EEO-blind candidate shortlists for clients
+* Structured application feedback
+* Event and audit logging
 
-### users  
-All authenticated users.
+### Candidate Capabilities
 
-- `tenant_id = NULL` → global candidate  
-- `tenant_id != NULL` → tenant member (admin, recruiter, client)
+* Guided profile onboarding
+* Resume upload and parsing (Phase 1)
+* Structured skills and experience storage
+* Application status transparency
+* Global account without tenant membership
 
-### jobs  
-Tenant-owned job requisitions, including salary, skills, and spec in structured fields.
+### Internal / Platform Capabilities
 
-### candidates  
-Candidate profiles (global or tenant-imported).
-
-- EEO-blind `public_id` for portals  
-- Skills, experience, resume metadata stored in `jsonb`  
-- Optional `user_id` link  
-
-### applications  
-Links jobs ↔ candidates.
-
-- Tracks pipeline stage  
-- Stores `match_score`, score, and notes  
-- Enforces uniqueness per `job_id` + `candidate_id`  
-
-### stages  
-Tenant-specific pipeline steps (ordered).
-
-### events  
-Audit log for compliance and debugging (views, updates, AI operations).
-
-### skills  
-Optional normalized skill taxonomy.
-
-### job_application_feedback  
-Structured reviewer feedback on applications.
-
-All tables include **RLS** to enforce tenant isolation and candidate visibility rules:
-
-- Tenants only see their own jobs, stages, events, and feedback  
-- Candidates see only their own data  
-- Tenants see candidates they imported or who applied to their jobs  
-- Global candidate pool is visible only to internal `super_admin` roles  
+* Tenant management
+* Global candidate governance
+* Compliance and audit tooling
+* AI usage logging and review
 
 ---
 
-# Phase 1 Roadmap (High-Level)
+## Technology Stack
 
-## 1. Authentication & Roles
-
-- Supabase auth (signup, login, logout)  
-- Map `auth.users` → `users` table with roles: `super_admin`, `admin`, `recruiter`, `client`, `candidate`  
-- Candidate sign-up without tenant (global candidates)  
-- Tenant onboarding and invitation flow for admins/recruiters  
-- Protected routes and auth-aware layout  
-- Password reset and email verification  
-
-## 2. Resume Parsing & Profile Enrichment
-
-- Integrate PDF/DOC/DOCX parsing  
-- Text extraction for resume content  
-- Basic NLP-based skill extraction (tech-first)  
-- Extract education, experience, and contact info into `jsonb` fields  
-- Store resume files in Supabase Storage with signed URLs  
-- (Later) LinkedIn/profile sync for global candidates  
-
-## 3. Matching Engine & Pool Gauge
-
-- Design v1 matching algorithm:
-
-  - Skill overlap (required vs possessed)  
-  - Experience alignment  
-  - Leniency slider → thresholds  
-  - Dealbreaker handling  
-
-- Persist `match_score` (0–100) on applications  
-- Internal APIs for:
-
-  - finding matches for a job  
-  - estimating global pool size (candidate pool gauge)  
-
-- EEO-blind shortlist output for client portal  
-
-## 4. Core ATS Flows
-
-- Employer/agency dashboard to manage jobs  
-- Candidate application flow wired to `applications`  
-- Pipeline stage transitions (drag-and-drop or action buttons)  
-- Feedback capture via `job_application_feedback`  
-- Basic event logging into `events`  
-
-## 5. UX / DX Improvements
-
-- Loading states, skeletons, and error boundaries  
-- Toast notifications and validation messages  
-- Mobile-responsive layouts  
-- Dark mode (late Phase 1 / early Phase 2)  
-- Developer ergonomics:
-
-  - Stronger types in `lib/supabase.ts`  
-  - Shared Zod schemas for API payloads  
+* **Frontend:** Next.js 16, React 19, TypeScript (strict), Tailwind CSS
+* **Backend:** Supabase (PostgreSQL, Auth, Storage)
+* **Security:** PostgreSQL Row Level Security (RLS)
+* **Infrastructure:** Vercel + Supabase
 
 ---
 
-# Extending the Project
+## Getting Started (Development)
 
-## Adding a New Component
+### Prerequisites
 
-- Create the component in `components/`  
-- Use TypeScript for type safety  
-- Follow existing design patterns (Tailwind classes, minimal props)  
-- Export and import it into the relevant page or layout  
+* Node.js 18+
+* Supabase project
 
-## Adding a New Database Table
+Create a `.env.local` file with:
 
-1. Create a migration in `supabase/migrations/` with a descriptive file name, e.g.:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-       YYYYMMDDHHMMSS_create_<table_name>.sql
+### Install & Run
 
-2. Include in the migration:
+```
+npm install
+npm run dev
+```
 
-   - `CREATE TABLE ...`  
-   - `ALTER TABLE ... ENABLE ROW LEVEL SECURITY;`  
-   - `CREATE POLICY ...` for RLS  
-   - Relevant indexes  
+Local app:
 
-3. Add/update TypeScript types and any Zod schemas as needed.
-
-## Adding a New Page
-
-- Create a folder/file under `app/`  
-- Export a default React component  
-- Add `'use client'` where client-side interactivity is required  
-- Link it from navigation or route to it directly  
+* [http://localhost:3000](http://localhost:3000)
 
 ---
 
-# Security Notes
+## Demo Mode (Phase 0 Artifact)
 
-- All database tables have **Row Level Security (RLS)** enabled  
-- Tenant isolation is enforced via JWT claims (`tenant_id`, `role`, `user_id`)  
-- Candidates can only see their own data  
-- Recruiters/clients can only see:
+The `/demo` route provides a **UI-only walkthrough** of the intended workflows:
 
-  - candidates they imported, or  
-  - candidates who applied to their jobs  
+* Job intake
+* Candidate application
+* Anonymized client review
+* Mock AI-style matching
 
-- Global candidate pool visibility is limited to `super_admin` (internal usage)  
-- Supabase handles authentication; always validate file uploads and user inputs in production  
+This demo illustrates **intent and UX**, not production logic.
 
 ---
 
-# Known Limitations (Phase 0 → Early Phase 1)
+## Project Structure (Simplified)
 
-- Resume parsing uses placeholder logic  
-- Matching logic is stubbed or mock-based  
-- Auth may still be partially wired (not production-ready)  
-- Salary and market comparison data is hardcoded  
-- Limited error handling and observability  
-- No production email notifications or interview scheduling yet  
-- Global candidate pool search & pool gauge are not wired to the UI  
-
----
-
-# Contributing
-
-During Phase 0 / early Phase 1, please:
-
-- Follow the roadmap priorities  
-- Maintain strict TypeScript usage where possible  
-- Write tests for any non-trivial logic  
-- Keep `/docs` in sync with real behavior  
-- Follow existing folder structure and naming patterns  
+```
+hire-io/
+├── app/                    # Next.js app router
+├── components/             # Reusable UI components
+├── lib/                    # Supabase + shared utilities
+├── supabase/
+│   └── migrations/         # Authoritative database schema
+├── docs/                   # Canonical documentation
+└── README.md
+```
 
 ---
 
-# License
+## Database Model (High-Level)
 
-**Proprietary – All rights reserved.**
+Key tables include:
+
+* `tenants` — Staffing agencies / employers
+* `users` — Authenticated users (tenant or global)
+* `jobs` — Tenant-owned job requisitions
+* `candidates` — Global or tenant-imported candidate profiles
+* `applications` — Visibility bridge between jobs and candidates
+* `stages` — Tenant-defined pipelines
+* `events` — Audit log
+* `job_application_feedback` — Structured review data
+
+All tables enforce RLS to preserve isolation, privacy, and trust.
+
+---
+
+## Contributing Guidelines
+
+During Phase 1:
+
+* Follow the roadmap and vision documents
+* Do not introduce open candidate browsing
+* Maintain strict TypeScript usage
+* Add RLS policies for any new table
+* Update `/docs` when behavior changes
+
+If a change conflicts with `docs/vision.md`, it should not be merged.
+
+---
+
+## License
+
+**Proprietary — All rights reserved.**
