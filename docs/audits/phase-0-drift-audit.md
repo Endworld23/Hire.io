@@ -273,3 +273,24 @@ I) Repo structure/tooling/env vars
   - Are there any super_admin-only routes or RPCs that expose global candidates? (Search `apps/web` and `apps/*` for `super_admin`-specific endpoints.)
   - Are AI prompt/response logs stored outside `events` (e.g., external log provider)? (Check logging config/runbooks.)
   - Are RLS policies in the live Supabase project consistent with these migrations? (Run `supabase db diff` or inspect Supabase dashboard.)
+
+> **Addendum (Jan 2026):** `docs/checklists/phase-0-gate.md` has been populated since this audit draft.  
+> Re-run/refresh this audit to evaluate each checklist section against repo reality.
+
+---
+
+## Phase-0 Resolution & Deferral Status
+
+### CRITICAL Findings
+
+| Finding | Phase-0 Status | Justification | Enforcement Location |
+|---|---|---|---|
+| Client portal PII access path (EEO-blind violation) | Deferred | Not resolved in code; Phase‑1 is **blocked** until client context uses PII‑free access paths. Deferral does **not** permit PII reads in client contexts. | `docs/phases/phase-1.md` → “Phase‑0 Gate (Blocking)”, “Phase 1 Modules & Acceptance Criteria (Client Portal)”, “Phase 1 Readiness Checklist (Execution)”; `docs/security-and-eeo.md` → “1.1.1 EEO‑Blind Enforcement Rules”; `docs/architecture.md` → “Client Portal — EEO‑Blind Controls” |
+| Candidate visibility bridge not implemented (applications as bridge) | Deferred | Not resolved in code; Phase‑1 requires the applications bridge to function as defined. Deferral does **not** allow global candidate browsing. | `docs/phases/phase-1.md` → “Phase‑0 Gate (Blocking)”, “Core ATS (Per Tenant)”, “Phase 1 Readiness Checklist (Execution)”; `docs/security-and-eeo.md` → “1.2 Candidate ID Mapping (Global vs Tenant)”; `docs/architecture.md` → “Applications as the visibility bridge” |
+
+### HIGH Findings
+
+| Finding | Phase-0 Status | Justification | Enforcement Location |
+|---|---|---|---|
+| Schema authority ambiguity (multiple “consolidated” migrations) | Resolved (Docs) | Documentation now requires a single canonical consolidated migration and records the ambiguity as a Phase‑0 deviation; gate evidence must name the canonical file. | `docs/architecture.md` → “Phase‑0 note” (authoritative migration requirement) |
+| RLS/JWT mismatch (docs vs implementation) | Resolved (Docs) | Architecture and Security docs now reflect `auth.uid()` + `public.users` enforcement; JWT claims are not assumed for RLS. | `docs/architecture.md` → “Row‑Level Security (RLS) — Patterns”; `docs/security-and-eeo.md` → “Authentication & Authorization” |

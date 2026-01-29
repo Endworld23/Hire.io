@@ -32,7 +32,7 @@ It ensures:
 
 ### 1.1 EEO-Blind Mode (Client Portal)
 
-All **client-facing views** strip or mask PII. End-employers **never** see direct identifiers.
+All **client-facing contexts** must be **EEO‑blind at the data access layer**. End‑employers **never** see direct identifiers.
 
 | Category | Field | Client Portal Action |
 |---------|--------|----------------------|
@@ -49,7 +49,16 @@ EEO-blind mode applies to:
 - AI-generated summaries in client context  
 - Public/client-accessible URLs  
 
-**AI Enforcement:** All PII tokens are stripped from prompts and completions before rendering in client context.
+**AI Enforcement:** Client‑context AI outputs must be generated from **PII‑free inputs** and must not contain PII.
+
+### 1.1.1 EEO‑Blind Enforcement Rules (Hard Constraints)
+
+Client‑facing contexts **MUST NOT**:
+- Select PII fields (name, email, phone, raw resume text, direct identifiers).
+- Access PII indirectly (joins, RPCs, server actions, or service‑role queries).
+- Rely on UI masking to “hide” PII that was already read.
+
+**Definition:** If a query reads PII for a client context, it is a **violation**, even if the UI does not render it.
 
 ---
 
@@ -57,10 +66,9 @@ EEO-blind mode applies to:
 
 Two scopes:
 
-#### Global Candidate Pool (platform-owned)
+#### Global Candidate Pool (platform-owned, future / Phase 2+)
 
-- `global_candidates.id`
-- `global_candidates.public_id` — PII-free public UUID
+- `global_candidates` is **not active in Phase 0 / Phase 1**. Any references are future‑state only.
 
 #### Tenant Candidate Records (agency-owned)
 
@@ -70,9 +78,12 @@ Two scopes:
 
 Guarantees:
 
-- Profiles reusable across agencies  
-- Tenants only see their own candidate rows  
+- Profiles reusable across agencies **only when explicitly linked via applications**  
+- Tenants only see their own candidate rows or applicants linked via applications  
 - Clients only see anonymized `public_id` + masked fields  
+
+**Visibility rule (non‑negotiable):**  
+Applications are the **only** visibility bridge across scopes. No tenant or client browsing of global candidates is ever permitted.
 
 ---
 
@@ -128,7 +139,7 @@ Postgres + RLS-centric, strict separation of platform vs tenant data.
 
 ### 2.1 Platform vs Tenant Tables
 
-**Platform-owned (future expansion):**
+**Platform-owned (future expansion / Phase 2+):**
 
 - `global_candidates`
 - Platform-level config, compliance logs
@@ -153,7 +164,7 @@ RLS prevents cross-tenant visibility and hides platform-only tables.
 
 ### 3.1 Auth & JWT Contents
 
-JWT includes:
+JWT may include:
 
 - `sub` (user_id)
 - `tenant_id`
@@ -162,6 +173,8 @@ JWT includes:
 - Optional: `is_platform_staff`
 
 Tokens are short-lived (≈1 hour). Background jobs use the **service role** with explicit tenant checks.
+
+**Enforcement note:** RLS enforcement must match the **implemented pattern** described in `docs/architecture.md` (currently `auth.uid()` + `public.users` lookups). JWT claims may exist, but **must not be assumed** as the enforcement mechanism unless explicitly implemented.
 
 ---
 
@@ -186,11 +199,11 @@ Only super_admin and server-side jobs may perform cross-tenant or global operati
 - Hides unauthorized navigation automatically
 
 **API Routes**  
-- Validate JWT claims  
+- Validate session/user identity and tenant/role using the implemented pattern (see `docs/architecture.md`)  
 - Service role used only server-side  
 
 **Database (RLS)**  
-- Policies tied to `tenant_id` + `role`  
+- Policies tied to `auth.uid()` and `public.users` (per current implementation)  
 - Writes must include correct `tenant_id`  
 
 Cross-tenant reads are impossible via the public/anon key.
@@ -268,12 +281,15 @@ created_at timestamptz
 )
 
 
-Examples:
+Examples (non‑exhaustive):
 
 - `candidate_viewed` — includes viewer role + candidate_public_id  
 - `resume_uploaded` — file metadata  
 - `ai_summary_generated` — model + mode  
 - `shortlist_shared` — job + client user  
+- `client_shortlist_viewed` — job + client user  
+- `client_feedback_submitted` — application + decision  
+- `application_stage_changed` — old/new stage  
 
 ---
 
@@ -284,6 +300,8 @@ Examples:
 - Clients → limited to their job context  
 - Super_admin → full logs via secure admin tools  
 
+**Requirement:** All material actions **MUST** emit an `events` record.  
+**Compliance rule:** Absence of an event log for a material action is a **compliance failure**.  
 `events` is append-only, with logical deletes only via metadata.
 
 ---
@@ -302,30 +320,30 @@ Examples:
 
 ## 🧠 7) AI Safety & Logging
 
-### 7.1 AI Call Logging
+### 7.1 AI Call Logging (Baseline)
 
-Logged:
+Logged (current baseline):
 
 - Model  
-- Prompt template ID  
 - Mode  
 - Tokens  
 - Duration  
 - Cost  
 
-PII removed before logging.
+PII must be removed **before** logging.
 
 ---
 
-### 7.2 Provider Data Use
+### 7.2 Provider Data Use (Baseline)
 
-All prompts sent with **no-training** flags.
+**Rule:** No raw prompts or responses containing PII are stored or sent to providers.  
+If provider‑side “no‑training” controls are available, they must be enabled.
 
 ---
 
-### 7.3 Bias Testing
+### 7.3 Bias Testing (Future / Phase 2+)
 
-Quarterly review:
+Planned (not yet active):
 
 - ~100 AI fit summaries  
 - Check for bias indicators  
@@ -417,3 +435,15 @@ All engineers must follow this framework.
 Any changes to data flows, AI prompts, user roles, or RLS require a **security review before merge**.
 
 **End of Security, Privacy & EEO Compliance Framework**
+
+---
+
+## ✅ Security & EEO Verification Checklist (Phase 0 / Phase 1)
+
+- [ ] Client queries do **not** select PII fields (no PII reads in client context).  
+- [ ] RLS blocks cross‑tenant reads **in‑app** (verified, not assumed).  
+- [ ] Applications enforce the visibility bridge (imported or applied candidates only).  
+- [ ] All client actions write `events` (shortlist views, feedback).  
+- [ ] All material actions write `events` (stage transitions, AI actions).  
+- [ ] AI calls logged without PII; no raw prompts/responses with PII stored or sent.  
+- [ ] No global candidate enumeration endpoints exist for tenant/client users.  

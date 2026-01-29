@@ -9,6 +9,45 @@
 >
 > Phase 0 is the platform’s **non-negotiable scaffolding**: tenancy, security, EEO-blindness, auditability, and documentation discipline.
 
+## Phase-0 Status
+
+**Status: NOT PASSED (Execution Blocked)**
+
+Phase-0 is the foundation and governance layer. It is considered **complete only when the Phase-0 Gate Checklist passes with evidence**.
+
+- Gate Checklist: `docs/checklists/phase-0-gate.md`
+- Drift Audit: `docs/audits/phase-0-drift-audit.md`
+
+**Important:** Phase-1 implementation work may proceed only after Phase-0 gate items are verifiably satisfied (PASS), or explicitly re-scoped in docs with the vision charter intact.
+
+---
+
+## Known Deviations (Blocking Phase-1)
+
+The following are known gaps/drifts between the Phase-0 intent and current repo reality. These must be resolved (code/schema) or explicitly re-scoped (docs) before Phase-1 execution begins.
+
+### CRITICAL (must fix before Phase-1)
+- **Client portal EEO-blind violation:** client shortlist data path selects candidate PII fields (e.g., `full_name`) and exposes raw experience without a redaction boundary.
+- **Candidate visibility bridge not implemented:** global candidates cannot be linked/visible via applications as described in the vision charter (“applications are the formal visibility bridge”).
+
+### HIGH
+- **Schema authority ambiguity:** multiple “consolidated schema” migrations claim to be authoritative.
+- **RLS/JWT mismatch:** docs describe JWT-claim-based RLS patterns, while repo uses `auth.uid()` lookups + `public.users` mapping in policies/logic.
+
+### MED
+- **Repo structure drift:** docs describe single-app layout, while repo is a monorepo (`apps/*`, `packages/*`).
+- **Env var naming drift:** docs reference env vars that don’t match actual usage in `apps/web`.
+
+---
+
+## Acceptance Criterion for Phase-0
+
+Phase-0 is considered **PASSED** only when:
+
+- Every section in `docs/checklists/phase-0-gate.md` is checkable with evidence (not aspirational).
+- A drift audit confirms **no critical violations** (especially EEO-blind + candidate visibility model).
+- Any remaining gaps are documented as Phase-1 scope **without weakening** the vision charter or gate constraints.
+
 ---
 
 ## 0.1 What Phase 0 Is (and Isn’t)
@@ -185,5 +224,39 @@ Phase 1 begins once:
 * and multi-tenant isolation is demonstrably enforced.
 
 ---
+
+---
+
+## Phase-0 Exit Declaration
+
+**Status:** Phase‑0 is now considered **PASSED WITH EXPLICIT DEFERRALS**.
+
+This declaration is based on:
+- Phase‑0 Gate Checklist: `docs/checklists/phase-0-gate.md`
+- Drift Audit: `docs/audits/phase-0-drift-audit.md`
+
+### Fully Complete (Phase‑0)
+
+- Documentation hierarchy and governance are explicit and aligned to `docs/vision.md`.
+- Security/EEO rules are codified as **data‑access constraints** (not UI masking).
+- Architecture and RLS enforcement are documented to match current repo reality.
+- Phase‑1 execution contract is defined and explicitly gated.
+- Gate and audit artifacts exist and are part of the system of record.
+
+### Explicitly Deferred to Phase‑1 (Binding Requirements)
+
+- **Client context PII‑free access path** (no PII reads in client flows).
+- **Applications as the visibility bridge** for global candidates.
+- **Canonical consolidated migration declaration** (single authoritative file).
+
+### Constraints Remain Binding
+
+Phase‑0 constraints remain **binding** in Phase‑1. Phase‑1 execution may proceed **only** within those constraints and only in ways that preserve:
+
+- No mass‑apply mechanics  
+- No global candidate browsing  
+- EEO‑blind client contexts with **no PII reads**  
+- Immutable, auditable material actions  
+- Provable tenant isolation  
 
 *End of Phase 0 Foundations (Truth, Safety, and Non‑Drift)*

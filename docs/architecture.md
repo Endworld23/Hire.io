@@ -13,6 +13,7 @@ This document explains *how* Hire.io is built and deployed from **MVP** through 
 - Deployment, logging, backups, SLOs  
 
 The **consolidated Supabase schema migration** is the authoritative source of truth for the database.
+**Phase‑0 note:** A single canonical consolidated migration **must be explicitly declared**; current ambiguity is a known Phase‑0 deviation per `docs/audits/phase-0-drift-audit.md`.
 
 ---
 
@@ -26,8 +27,8 @@ The **consolidated Supabase schema migration** is the authoritative source of tr
 - **Search:** Postgres FTS (later Meilisearch, but not required for Phase 1)  
 - **AI:** OpenAI API (job intake Q&A, fit summaries, matching assistance)  
 - **Email:** Resend or SendGrid (for invites, password reset, notifications)  
-- **Auth model:** Supabase Auth; JWT session; claims include `user_id`, `tenant_id` (optional), `role`  
-- **Docs & CI:** `/docs` as system-of-record + GitHub Actions (lint/build/test)  
+- **Auth model:** Supabase Auth sessions; enforcement uses `auth.uid()` with `public.users` lookups (per current implementation)  
+- **Docs & CI:** `docs/` as system-of-record + GitHub Actions (lint/build/test)  
 
 High level flow:
 
@@ -72,11 +73,9 @@ These are future layers and **not required** for Phase 0 / early Phase 1.
    - An `applications` row is created: `tenant_id = job.tenant_id`, `job_id`, `candidate_id`, `stage = 'applied' | 'new'`, `score`, `match_score`.
 
 3. **EEO-Blind client view**
-   - Client user (role `client`) logs in; JWT has `tenant_id`, `role`.  
+   - Client user (role `client`) logs in; tenant/role resolved via `public.users` by `auth.uid()`.  
    - Client opens a shortlist page for a specific job.  
-   - API route:
-     - Fetches `applications` for that job in the client’s tenant.  
-     - Joins to `candidates` but only returns **EEO-blind** fields for client mode (no name/email/phone; uses `public_id` and skill/experience summary).  
+   - Client data access **must use a PII‑free access path** (RPC/view or query that never selects PII fields).  
    - Client sees **watermarked, anonymized** candidate cards; any view is logged to `events`.
 
 ### 2.2 Job Intake Q&A (AI)
@@ -269,23 +268,22 @@ These should already exist or be closely aligned with the consolidated schema mi
 
 ## 4) Row-Level Security (RLS) — Patterns
 
-RLS is enabled on **all tables**. Enforcement relies on JWT claims:
+RLS is enabled on **all tables**. Enforcement relies on:
 
-- `user_id` (`auth.uid()`)  
-- `tenant_id` (may be `null` for global-only users)  
-- `role` (`super_admin`, `admin`, `recruiter`, `client`, `candidate`)  
+- `auth.uid()` for session identity  
+- Tenant/role resolved via `public.users` lookup  
 
 ### 4.1 Basic Patterns
 
 - **Tenant isolation**:
   - Most tenant-bound tables (`jobs`, `applications`, `stages`, `events`, `job_application_feedback`) have policies like:
 
-        using (tenant_id::text = (auth.jwt() ->> 'tenant_id'))
+        using (tenant_id = (select tenant_id from public.users where id = auth.uid()))
 
 - **Role-scoped writes**:
   - Write policies add role checks, e.g.:
 
-        and (auth.jwt() ->> 'role') in ('admin','recruiter')
+        and (select role from public.users where id = auth.uid()) in ('admin','recruiter')
 
 - **Global candidate pool restrictions**:
   - `super_admin` can see all candidates for internal purposes.
@@ -317,11 +315,11 @@ Tenant recruiters accessing candidates linked to their jobs:
     on candidates for select
     to authenticated
     using (
-      (auth.jwt() ->> 'role') in ('admin','recruiter')
+      (select role from public.users where id = auth.uid()) in ('admin','recruiter')
       and id in (
         select candidate_id
         from applications
-        where tenant_id::text = (auth.jwt() ->> 'tenant_id')
+        where tenant_id = (select tenant_id from public.users where id = auth.uid())
       )
     );
 
@@ -330,7 +328,7 @@ Super admin global visibility:
     create policy super_admin_can_view_all_candidates
     on candidates for select
     to authenticated
-    using ((auth.jwt() ->> 'role') = 'super_admin');
+    using ((select role from public.users where id = auth.uid()) = 'super_admin');
 
 > The actual RLS definitions live in the migration; this section describes how they are intended to behave.
 
@@ -338,7 +336,7 @@ Super admin global visibility:
 
 ## 5) API Surface (MVP)
 
-Thin Next.js API routes under `/app/api/*` should:
+Thin Next.js routes live under `apps/web/app/...` and may include server actions and route handlers. When route handlers are used, they live under `apps/web/app/api/*` and should:
 
 - Validate input with Zod  
 - Enforce role/tenant checks in addition to RLS  
@@ -400,7 +398,7 @@ Thin Next.js API routes under `/app/api/*` should:
 ### 5.5 Client Portal
 
 - `GET /api/client/jobs/:id/shortlist`
-  - Returns EEO-blind shortlist data (uses `public_id` and anonymized candidate snippets).
+  - Returns EEO‑blind shortlist data **via a PII‑free access path** (no PII fields selected).
 
 - `POST /api/client/feedback`
   - Client approves/rejects short-listed candidates or requests interviews.  
@@ -410,12 +408,11 @@ Thin Next.js API routes under `/app/api/*` should:
 
 ## 6) Environment Variables (MVP)
 
-Create `.env.local` (Next.js) and `.env` (local dev as needed):
+Current repo usage:
 
     # Supabase
-    NEXT_PUBLIC_SUPABASE_URL=...
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-    SUPABASE_SERVICE_ROLE_KEY=...
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+    SUPABASE_SECRET_KEY=...
 
     # OpenAI
     OPENAI_API_KEY=...
@@ -424,8 +421,7 @@ Create `.env.local` (Next.js) and `.env` (local dev as needed):
     RESEND_API_KEY=...           # or SENDGRID_API_KEY
 
     # App
-    NEXTAUTH_SECRET=...          # if NextAuth or similar is used
-    APP_BASE_URL=https://app.hire.io
+    NEXT_PUBLIC_APP_URL=https://app.hire.io
 
 > **Secrets:** Never commit secrets to Git. Use Vercel/Supabase secret managers.
 
@@ -436,9 +432,9 @@ Create `.env.local` (Next.js) and `.env` (local dev as needed):
 ### 7.1 Security
 
 - HTTPS everywhere, HSTS via Vercel  
-- JWT must include `user_id`, `role`, and optional `tenant_id`  
+- Auth/RLS enforcement must match the implemented pattern (see Section 4)  
 - RLS enforced on **every** table  
-- No raw resumes exposed to client-side portals without anonymization  
+- Client contexts must never read PII fields (EEO‑blind is a data‑access rule)  
 - PII redaction in AI prompts & client-facing outputs  
 - Global candidate pool is only visible to `super_admin` and controlled AI flows, not directly to tenants.
 
@@ -557,8 +553,7 @@ Create `.env.local` (Next.js) and `.env` (local dev as needed):
 
 ## 11) Client Portal — EEO-Blind Controls
 
-- Server strips:
-  - `full_name`, `email`, `phone`, photo/social links.  
+- **Data access boundary (hard rule):** client contexts **must not read PII fields** at all (no server‑side selects/joins/RPCs that include PII).
 - Client sees:
   - Alias via `public_id`  
   - Skill/experience summary  
@@ -612,7 +607,7 @@ The platform must maintain a defensible audit trail for AI-assisted and human de
 - [ ] Candidate can sign up globally and build a profile.  
 - [ ] Candidate can apply to a tenant job; an `applications` row is created.  
 - [ ] Recruiter can move candidate through stages via UI (`applications.stage`).  
-- [ ] Client can view EEO-blind shortlist for at least one job.  
+- [ ] Client can view EEO‑blind shortlist for at least one job **without any PII reads**.  
 - [ ] Matching endpoint returns ranked candidates for a job.  
 - [ ] Pool gauge endpoint returns realistic candidate counts (even if approximate).  
 - [ ] RLS tests confirm:
@@ -653,12 +648,21 @@ Seed scripts and test accounts (if present) should create:
 
 ## 16) Glossary
 
-- **Global Candidate Pool:** All candidates stored by Hire.io; may or may not be tied to a specific tenant.  
+- **Global Candidate Pool:** Conceptual pool; global candidate data is future‑state (Phase 2+) unless explicitly implemented.  
 - **Tenant:** A staffing agency or employer organization using Hire.io.  
-- **EEO-Blind:** Anonymized candidate presentations (no name/contact/demographics) to reduce bias.  
+- **EEO-Blind:** Client contexts must not read PII fields at the data access layer; UI masking is insufficient.  
 - **Leniency Slider:** UI control that adjusts strictness of matching rules.  
 - **Pool Gauge:** A visual indicator of how many candidates could plausibly match a job under current filters.  
-- **RLS (Row-Level Security):** Database-enforced isolation and permissioning based on JWT claims.  
+- **RLS (Row-Level Security):** Database-enforced isolation and permissioning based on `auth.uid()` with `public.users` lookups (current implementation).  
 - **Super Admin:** Internal Hire.io user with global operational access, used for support, troubleshooting, and internal AI features.
+
+---
+
+## ✅ Architecture Verification (Phase 0 / Phase 1)
+
+- [ ] RLS tenant isolation proven in‑app (no cross‑tenant reads).  
+- [ ] Client context uses **PII‑free** access paths only.  
+- [ ] Applications bridge enables candidate visibility exactly as defined (imported or applied candidates only).  
+- [ ] All material actions emit `events` (views, feedback, stage changes, AI actions).  
 
 ---

@@ -1,13 +1,17 @@
 # Hire.io — Master Product Roadmap & Platform Strategy
 
-> **Status:** Canonical
+> **Status:** Canonical (Sequencing & Scope Only)
 > **Owner:** Aaron Martin
 > **Last Updated:** January 2026
 >
-> This document defines **what Hire.io is building, why it exists, and how it evolves over time**.
-> It is the authoritative roadmap governing **all product, architecture, AI, and business decisions**.
+> This document defines **how Hire.io evolves over time** (sequencing and scope).
+> It does **not** override the Vision Charter or system constraints.
 >
-> All implementation must align with:
+> Authority & alignment:
+>
+> * **Tier‑1 (Non‑Negotiable):** `docs/vision.md`
+> * **Tier‑2 (System Constraints):** `docs/architecture.md`, `docs/security-and-eeo.md`
+> * **This roadmap:** sequencing and scope only — must not contradict Tier‑1 or Tier‑2
 >
 > * `docs/vision.md` (non‑negotiable intent)
 > * `docs/architecture.md` (system constraints)
@@ -97,15 +101,20 @@ AI **never replaces human judgment**.
 
 ---
 
-## 4. Phase Roadmap (Authoritative)
+## 4. Phase Roadmap (Authoritative Sequencing)
 
-### Phase 0 — Foundations (Complete)
+### Phase 0 — Foundations (Defined, NOT Passed)
 
 **Purpose:** Build the system that prevents future mistakes.
 
-Delivered:
+Status:
 
-* Canonical schema + RLS
+* **Phase‑0 gate is NOT passed** — see `docs/checklists/phase-0-gate.md`
+* **Phase‑1 execution is blocked until Phase‑0 gate passes** — see `docs/audits/phase-0-drift-audit.md`
+
+Defined in Phase 0 (not yet accepted):
+
+* Consolidated schema + RLS (canonical migration **must be explicitly declared**; current ambiguity is a known Phase‑0 deviation per the audit)
 * Security & EEO framework
 * Architecture documentation
 * Phase discipline
@@ -231,6 +240,12 @@ All work must map to:
 3. A trust or efficiency outcome
 
 If it does not clearly serve one of these, it does not ship.
+
+Repo structure reality (Phase‑0):
+
+* Monorepo with `apps/web` and `packages/*`
+* Database migrations in `supabase/migrations`
+* Documentation in `docs/*`
 
 ---
 
