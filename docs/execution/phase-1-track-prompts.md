@@ -8,6 +8,15 @@
 
 ---
 
+## Global Stop Conditions (Non-Negotiable)
+- If any client-context PII field selection is required (even server-side), STOP and report.
+- If any schema/migration change is required, STOP and report.
+- If any client flow requires bypassing RLS with service role, STOP and report.
+- If any task enables global candidate enumeration, STOP and report.
+- If any acceptance criterion cannot be verified, STOP and write a short note describing the gap and the smallest possible fix.
+
+---
+
 ## Track Execution Order
 1) Auth & Tenant Resolution Hardening  
 2) Candidate Visibility Bridge (Applications)  
@@ -30,7 +39,7 @@
 - No known cross‑tenant access paths in app routes
 
 ### Execution Prompt
-I will harden auth and tenant/role resolution using the implemented pattern (`auth.uid()` + `public.users`) and validate role‑based routing. I will edit only `apps/web/app/(protected)/**`, `apps/web/lib/server-user.ts`, `apps/web/lib/supabase-server.ts`, and `apps/web/lib/actions/auth.ts`. I will not modify database schema, migrations, or introduce JWT‑claim enforcement. I will not loosen Phase‑0 constraints, enable PII reads in client context, or add new roles. Acceptance criteria must match `docs/phases/phase-1.md` and the requirements in `docs/execution/phase-1-execution-map.md`. Verification must confirm role‑appropriate routing and tenant scoping using `auth.uid()` lookups. If I discover a need to change enforcement patterns or add claims, I will stop and report.
+I will harden auth and tenant/role resolution using the implemented pattern (`auth.uid()` + `public.users`) and validate role‑based routing. I will edit only `apps/web/app/(protected)/**`, `apps/web/lib/server-user.ts`, `apps/web/lib/supabase-server.ts`, and `apps/web/lib/actions/auth.ts`. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not modify database schema, migrations, or introduce JWT‑claim enforcement. I will not loosen Phase‑0 constraints, enable PII reads in client context, or add new roles. Acceptance criteria must match `docs/phases/phase-1.md` and the requirements in `docs/execution/phase-1-execution-map.md`. Verification must confirm role‑appropriate routing and tenant scoping using `auth.uid()` lookups. If I discover a need to change enforcement patterns or add claims, I will stop and report.
 
 ### Acceptance Criteria
 - Role‑appropriate routing works for admin, recruiter, client, and candidate
@@ -51,7 +60,7 @@ I will harden auth and tenant/role resolution using the implemented pattern (`au
 - Client PII‑free access path is still enforced
 
 ### Execution Prompt
-I will implement the candidate visibility bridge so tenant users can see candidates only via import or application linkage. I will edit only `apps/web/lib/actions/candidates.ts`, `apps/web/lib/actions/applications.ts`, and `apps/web/app/(protected)/dashboard/**`. I will not add global candidate browsing, and I will not create new tables or APIs. I will keep Phase‑0 constraints intact: applications are the only visibility bridge, no global enumeration endpoints, and no client‑context PII reads. Acceptance criteria must match `docs/phases/phase-1.md` and `docs/execution/phase-1-execution-map.md`. If any task requires exposing global candidates or weakening RLS, I will stop.
+I will implement the candidate visibility bridge so tenant users can see candidates only via import or application linkage. I will edit only `apps/web/lib/actions/candidates.ts`, `apps/web/lib/actions/applications.ts`, and `apps/web/app/(protected)/dashboard/**`. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not add global candidate browsing, and I will not create new tables or APIs. I will keep Phase‑0 constraints intact: applications are the only visibility bridge, no global enumeration endpoints, and no client‑context PII reads. Acceptance criteria must match `docs/phases/phase-1.md` and `docs/execution/phase-1-execution-map.md`. If any task requires exposing global candidates or weakening RLS, I will stop.
 
 ### Acceptance Criteria
 - Recruiters can see candidates only via import or application linkage
@@ -72,7 +81,7 @@ I will implement the candidate visibility bridge so tenant users can see candida
 - No client‑context PII reads exist in current routes
 
 ### Execution Prompt
-I will enforce the client EEO‑blind data‑access boundary by ensuring client contexts do not read PII fields at any layer. I will edit only `apps/web/app/(protected)/client/**` and any existing server‑side access paths they use. I will not modify database schema or migrations. I will not select PII fields even if UI masking exists. Acceptance criteria and verification must align with `docs/security-and-eeo.md`, `docs/architecture.md`, and `docs/phases/phase-1.md`. If I find any need to read PII for client flows, I will stop and report.
+I will enforce the client EEO‑blind data‑access boundary by ensuring client contexts do not read PII fields at any layer. I will edit only `apps/web/app/(protected)/client/**` and the specific existing server‑side access paths they use. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not modify database schema or migrations. I will not select PII fields even if UI masking exists. Acceptance criteria and verification must align with `docs/security-and-eeo.md`, `docs/architecture.md`, and `docs/phases/phase-1.md`. If I find any need to read PII for client flows, I will stop and report.
 
 ### Acceptance Criteria
 - Client shortlist and feedback flows do not read/select PII fields
@@ -93,7 +102,7 @@ I will enforce the client EEO‑blind data‑access boundary by ensuring client 
 - RLS isolation proven in‑app for core flows
 
 ### Execution Prompt
-I will implement core ATS workflows (jobs, candidates, applications, pipeline stages) within tenant scope. I will edit only `apps/web/app/(protected)/dashboard/jobs/**`, `apps/web/app/(protected)/dashboard/candidates/**`, and `apps/web/lib/actions/jobs.ts` / `apps/web/lib/actions/applications.ts`. I will not introduce cross‑tenant reads, global browsing, or client PII reads. Acceptance criteria must align to `docs/phases/phase-1.md` and the execution map. If any workflow requires violating candidate visibility rules, I will stop.
+I will implement core ATS workflows (jobs, candidates, applications, pipeline stages) within tenant scope. I will edit only `apps/web/app/(protected)/dashboard/jobs/**`, `apps/web/app/(protected)/dashboard/candidates/**`, `apps/web/lib/actions/jobs.ts`, and `apps/web/lib/actions/applications.ts`. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not introduce cross‑tenant reads, global browsing, or client PII reads. Acceptance criteria must align to `docs/phases/phase-1.md` and the execution map. If any workflow requires violating candidate visibility rules, I will stop.
 
 ### Acceptance Criteria
 - Jobs are created/edited within tenant scope
@@ -114,7 +123,7 @@ I will implement core ATS workflows (jobs, candidates, applications, pipeline st
 - Candidate visibility rules enforced via applications bridge
 
 ### Execution Prompt
-I will implement candidate transparency and compliant closure templates for Phase‑1. I will edit only `apps/web/app/(protected)/candidate/**`, `apps/web/app/(protected)/dashboard/**`, and `apps/web/lib/actions/applications.ts`. I will not expose any PII to client contexts, and I will not change scope beyond Phase‑1 requirements. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If transparency requires new data models or policies, I will stop and document the gap.
+I will implement candidate transparency and compliant closure templates for Phase‑1. I will edit only `apps/web/app/(protected)/candidate/**`, `apps/web/app/(protected)/dashboard/**`, and `apps/web/lib/actions/applications.ts`. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not expose any PII to client contexts, and I will not change scope beyond Phase‑1 requirements. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If transparency requires new data models or policies, I will stop and document the gap.
 
 ### Acceptance Criteria
 - Candidates see only their own status and stage history
@@ -135,7 +144,7 @@ I will implement candidate transparency and compliant closure templates for Phas
 - Client PII‑free boundary remains enforced
 
 ### Execution Prompt
-I will ensure all material actions emit `events`. I will edit only `apps/web/lib/actions/**` and relevant server actions in `apps/web/app/(protected)/**`. I will not change schema or migrations. I will not leave any material action unlogged. Acceptance criteria must align with `docs/security-and-eeo.md`, `docs/architecture.md`, and `docs/phases/phase-1.md`. If I find a material action without an event log and cannot add one without schema changes, I will stop and report.
+I will ensure all material actions emit `events`. I will edit only `apps/web/lib/actions/applications.ts`, `apps/web/lib/actions/jobs.ts`, `apps/web/lib/actions/matching.ts`, `apps/web/app/(protected)/client/**`, and relevant server actions already under `apps/web/app/(protected)/**`. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not change schema or migrations. I will not leave any material action unlogged. Acceptance criteria must align with `docs/security-and-eeo.md`, `docs/architecture.md`, and `docs/phases/phase-1.md`. If I find a material action without an event log and cannot add one without schema changes, I will stop and report.
 
 ### Acceptance Criteria
 - Events exist for shortlist views, client feedback, stage changes, and AI actions
@@ -154,7 +163,7 @@ I will ensure all material actions emit `events`. I will edit only `apps/web/lib
 - Core ATS data paths are stable and tenant‑scoped
 
 ### Execution Prompt
-I will implement matching and pool signals (v1) as assistive features. I will edit only `apps/web/lib/actions/matching.ts` and `apps/web/lib/matching-engine.ts`. I will not expose identities in client context or implement autonomous decisioning. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If any step requires PII exposure or changes to schema, I will stop.
+I will implement matching and pool signals (v1) as assistive features. I will edit only `apps/web/lib/actions/matching.ts` and `apps/web/lib/matching-engine.ts`. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not expose identities in client context or implement autonomous decisioning. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If any step requires PII exposure or changes to schema, I will stop.
 
 ### Acceptance Criteria
 - `match_score` computed for applications within tenant scope
@@ -175,7 +184,7 @@ I will implement matching and pool signals (v1) as assistive features. I will ed
 - Job creation/edit flows stable
 
 ### Execution Prompt
-I will implement job integrity signals (freshness and intent indicators) derived from real job data. I will edit only `apps/web/app/(protected)/dashboard/jobs/**` and `apps/web/lib/actions/jobs.ts`. I will not add new scope or introduce artificial indicators. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If integrity signals require new schema, I will stop and report.
+I will implement job integrity signals (freshness and intent indicators) derived from real job data. I will edit only `apps/web/app/(protected)/dashboard/jobs/**` and `apps/web/lib/actions/jobs.ts`. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not add new scope or introduce artificial indicators. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If integrity signals require new schema, I will stop and report.
 
 ### Acceptance Criteria
 - Freshness indicators update based on job activity
@@ -194,7 +203,7 @@ I will implement job integrity signals (freshness and intent indicators) derived
 - Events coverage is consistent
 
 ### Execution Prompt
-I will implement minimal notifications for application and feedback events. I will edit only `apps/web/lib/actions/**` and any existing notification utilities. I will not expose PII to client contexts and will ensure events are logged. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If notifications require new providers or schema changes, I will stop.
+I will implement minimal notifications for application and feedback events. I will edit only `apps/web/lib/actions/applications.ts`, `apps/web/lib/actions/jobs.ts`, and existing notification utilities already present in the repo. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not expose PII to client contexts and will ensure events are logged. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If notifications require new providers or schema changes, I will stop.
 
 ### Acceptance Criteria
 - Notifications trigger on application/feedback/interview events
@@ -214,7 +223,7 @@ I will implement minimal notifications for application and feedback events. I wi
 - Core data and events are stable
 
 ### Execution Prompt
-I will implement basic analytics (counts, funnels, time‑to‑fill) derived from live data. I will edit only `apps/web/app/(protected)/dashboard/**`. I will not add predictive analytics or use mock data. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If analytics require schema changes, I will stop and report.
+I will implement basic analytics (counts, funnels, time‑to‑fill) derived from live data. I will edit only `apps/web/app/(protected)/dashboard/**`. If additional files are required beyond this list, STOP and report the file path(s) and justification before proceeding. I will not add predictive analytics or use mock data. Acceptance criteria must align with `docs/phases/phase-1.md` and the execution map. If analytics require schema changes, I will stop and report.
 
 ### Acceptance Criteria
 - Dashboard counts match underlying jobs/applications/events
