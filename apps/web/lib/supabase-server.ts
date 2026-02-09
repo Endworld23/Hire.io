@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import type { Database } from '@hire-io/utils'
+import { envPublic } from '@/lib/env.public'
 
 export async function withTimeout<T>(promise: Promise<T>, ms: number, label: string) {
   return Promise.race([
@@ -12,21 +13,9 @@ export async function withTimeout<T>(promise: Promise<T>, ms: number, label: str
 }
 
 export async function createServerSupabase() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-
-  if (!supabaseUrl) {
-    throw new Error('Supabase environment variable NEXT_PUBLIC_SUPABASE_URL is not configured')
-  }
-  if (!supabaseAnonKey) {
-    throw new Error(
-      'Supabase publishable key is not configured (expected NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)'
-    )
-  }
-
   const cookieStore = await cookies()
 
-  return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  return createServerClient<Database>(envPublic.supabaseUrl, envPublic.supabasePublishableKey, {
     cookies: {
       get(name) {
         return cookieStore.get(name)?.value

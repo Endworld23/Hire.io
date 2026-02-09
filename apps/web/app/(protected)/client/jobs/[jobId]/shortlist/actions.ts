@@ -4,9 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createSupabaseClient } from '@hire-io/utils'
 import { requireClientUser } from '@/lib/server-user'
 import { applicationStageSchema } from '@hire-io/schemas'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+import { env } from '@/lib/env'
 
 type Decision = 'shortlist' | 'reject'
 
@@ -29,7 +27,7 @@ export async function updateShortlistDecision({
     return { error: 'Unauthorized' }
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
+  const supabase = createSupabaseClient(env.supabaseUrl, env.supabaseSecretKey) as any
 
   const { data: application } = await supabase
     .from('applications')

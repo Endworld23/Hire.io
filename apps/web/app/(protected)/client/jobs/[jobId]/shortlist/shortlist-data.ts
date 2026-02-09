@@ -4,9 +4,7 @@ import { randomUUID } from 'crypto'
 import { notFound } from 'next/navigation'
 import { createSupabaseClient } from '@hire-io/utils'
 import { requireClientUser } from '@/lib/server-user'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+import { env } from '@/lib/env'
 
 export type ClientShortlistCandidate = {
   applicationId: string
@@ -37,7 +35,7 @@ export async function getClientShortlist(jobId: string): Promise<ClientShortlist
     notFound()
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
+  const supabase = createSupabaseClient(env.supabaseUrl, env.supabaseSecretKey) as any
 
   const { data: job } = await supabase
     .from('jobs')

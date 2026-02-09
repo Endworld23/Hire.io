@@ -3,9 +3,7 @@
 import { createSupabaseClient } from '@hire-io/utils'
 import { calculateMatchScore } from '@/lib/matching-engine'
 import { getCurrentUserProfile } from '@/lib/server-user'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+import { env } from '@/lib/env'
 
 type ApplicationRecord = {
   id: string
@@ -23,7 +21,7 @@ export async function recomputeMatchesForJob(jobId: string, tenantId?: string) {
     return
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
+  const supabase = createSupabaseClient(env.supabaseUrl, env.supabaseSecretKey) as any
 
   const { data: job } = await supabase
     .from('jobs')

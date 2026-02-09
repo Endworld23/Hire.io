@@ -1,8 +1,6 @@
 import { cookies } from 'next/headers'
 import { createSupabaseClient } from '@hire-io/utils'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+import { env } from '@/lib/env'
 
 export type SupabaseUserProfile = {
   id: string
@@ -19,7 +17,7 @@ export async function getCurrentUserProfile() {
     return null
   }
 
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey)
+  const supabase = createSupabaseClient(env.supabaseUrl, env.supabaseSecretKey)
   const {
     data: { user },
   } = await supabase.auth.getUser(accessToken)

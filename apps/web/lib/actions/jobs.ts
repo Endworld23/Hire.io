@@ -11,8 +11,9 @@ import type {
 } from '@hire-io/schemas'
 import { createJobSchema, aiIntakeSchema, aiIntakeResultSchema } from '@hire-io/schemas'
 import { createServerSupabase } from '@/lib/supabase-server'
+import { env } from '@/lib/env'
 
-const openaiApiKey = process.env.OPENAI_API_KEY
+const openaiApiKey = env.openaiApiKey
 
 type UserProfile = {
   id: string

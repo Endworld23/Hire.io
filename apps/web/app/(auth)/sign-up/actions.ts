@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import { createSupabaseClient, type SupabaseClient } from '@hire-io/utils'
 import { createServerSupabase } from '@/lib/supabase-server'
 import { getAuthRedirectDestination } from '@/lib/actions/auth'
+import { env } from '@/lib/env'
+import { envPublic } from '@/lib/env.public'
 
 type SignUpResult = {
   success: boolean
@@ -23,10 +25,6 @@ type SignUpValues = {
   email: string
   password: string
 }
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY
 
 function validateSignUpForm(formData: FormData): {
   values: SignUpValues
@@ -97,12 +95,8 @@ export async function signUpWithTenant(
   let serviceClient: SupabaseClient
 
   try {
-    if (!supabaseUrl || !supabasePublishableKey || !supabaseSecretKey) {
-      throw new Error('Missing Supabase environment variables')
-    }
-
     anonClient = await createServerSupabase()
-    serviceClient = createSupabaseClient(supabaseUrl, supabaseSecretKey, {
+    serviceClient = createSupabaseClient(envPublic.supabaseUrl, env.supabaseSecretKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

@@ -8,9 +8,7 @@ import { eeoCandidateIntakeSchema, applicationStageSchema } from '@hire-io/schem
 import { getCurrentUserProfile } from '@/lib/server-user'
 import { recomputeMatchesForJob } from '@/lib/actions/matching'
 import { parseResume } from '@/lib/resume-parser'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY!
+import { env } from '@/lib/env'
 const RESUME_BUCKET = 'resumes'
 const MAX_FILE_SIZE = 8 * 1024 * 1024 // 8 MB
 const ALLOWED_FILE_TYPES = [
@@ -83,7 +81,7 @@ export async function addCandidateAction(
 
   const fileArrayBuffer = await resumeFile.arrayBuffer()
   const fileBuffer = Buffer.from(fileArrayBuffer)
-  const supabase = createSupabaseClient(supabaseUrl, supabaseSecretKey) as any
+  const supabase = createSupabaseClient(env.supabaseUrl, env.supabaseSecretKey) as any
 
   const { data: job } = await supabase
     .from('jobs')

@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { signOut } from '@/lib/actions/auth'
+import { redirect } from 'next/navigation'
+import { signOut, getAuthRedirectDestination } from '@/lib/actions/auth'
 import { addApplicationFeedback } from '@/lib/actions/applications'
 import { createServerSupabase } from '@/lib/supabase-server'
 
@@ -70,7 +71,8 @@ async function getClientData(jobId?: string): Promise<ClientData> {
 
   if (profileError || !userProfile || userProfile.role !== 'client') {
     console.warn('[client] profile error', { message: profileError?.message, userId: user.id })
-    return { error: 'Profile unavailable for client role.' }
+    const destination = await getAuthRedirectDestination()
+    redirect(destination)
   }
 
   const tenantId = userProfile.tenant?.id ?? userProfile.tenant_id ?? null

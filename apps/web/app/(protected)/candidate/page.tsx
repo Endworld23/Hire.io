@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { signOut } from '@/lib/actions/auth'
+import { redirect } from 'next/navigation'
+import { signOut, getAuthRedirectDestination } from '@/lib/actions/auth'
 import { createServerSupabase } from '@/lib/supabase-server'
 
 type CandidateData = {
@@ -38,7 +39,8 @@ async function getCandidateData(): Promise<CandidateData> {
 
   if (profileError || !userProfile || userProfile.role !== 'candidate') {
     console.warn('[candidate] profile error', { message: profileError?.message, userId: user.id })
-    return { error: 'Profile unavailable for candidate role.' }
+    const destination = await getAuthRedirectDestination()
+    redirect(destination)
   }
 
   const { data: candidateProfile, error: candidateError } = await supabase

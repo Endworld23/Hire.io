@@ -2,9 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import type { Database } from '@hire-io/utils'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabasePublishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+import { envPublic } from '@/lib/env.public'
 
 type UserProfile = {
   role: 'super_admin' | 'admin' | 'recruiter' | 'client' | 'candidate'
@@ -16,7 +14,7 @@ export default async function proxy(request: NextRequest) {
   let response = NextResponse.next()
   const hasSbCookie = request.cookies.getAll().some((c) => c.name.startsWith('sb-'))
 
-  const supabase = createServerClient<Database>(supabaseUrl, supabasePublishableKey, {
+  const supabase = createServerClient<Database>(envPublic.supabaseUrl, envPublic.supabasePublishableKey, {
     cookies: {
       get(name) {
         return request.cookies.get(name)?.value
